@@ -24,13 +24,13 @@ These rules apply to every agent and every session, including the main session.
 - Every spec item has a stable ID (`OV-`, `AR-`, `DM-`, `BR-`, `DS-`, `UI-`, `AN-`, `TC-`). IDs are never
   renumbered or reused; removed items are struck through and marked `REMOVED in <version>`.
 - Each source file starts with `// Spec: <ID>, <ID>, …` listing what it implements (SQL files: `-- Spec: …`).
-- Each automated test title starts with its TC ID. `npm run spec:trace -- Mx` must pass.
+- Each automated test title starts with its TC ID. `yarn spec:trace Mx` must pass.
 - When the spec diff changes an ID, update every file whose `Spec:` header lists that ID, plus their tests.
 
 ## R4 — Determinism
 - Follow `spec/01-architecture.md` exactly: folder layout, naming, stack, versions, scripts.
 - Dependencies: only those in AR-006; exact versions are pinned by the committed lockfiles. Never run
-  `npm update` or bump versions unless the spec says so.
+  `yarn up` or bump versions unless the spec says so.
 - Run `prettier --write` and `eslint --fix` on changed files only. Do not reformat untouched files.
 - Do not rename, move or restructure code that is not in scope.
 

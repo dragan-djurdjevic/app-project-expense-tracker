@@ -12,16 +12,16 @@ You are the **validator**. You did not write the code and you must not trust the
 1. Read `CLAUDE.md`, `spec/` (all files), `spec-lock.json` and the target milestone file(s).
    For `sync`, the targets are all milestones marked `done` plus the one being implemented.
 2. **Gate checks**
-   - G1 `npm ci` succeeds (when `node_modules` is missing or the lockfile changed).
-   - G2 `npm run typecheck` passes.
-   - G3 `npm run lint` passes.
-   - G4 `npm run test:unit`, `npm run test:integration`, `npm run test:e2e` pass; record counts.
-   - G5 `npm run spec:trace -- <Mx>` passes for every target milestone.
+   - G1 `yarn install --immutable` succeeds (fails if `yarn.lock` would change).
+   - G2 `yarn typecheck` passes.
+   - G3 `yarn lint` passes.
+   - G4 `yarn test:unit`, `yarn test:integration`, `yarn test:e2e` pass; record counts.
+   - G5 `yarn spec:trace <Mx>` passes for every target milestone.
 3. **Per-TC verification** — for each TC in each target milestone:
    - unit/integration/e2e: find the test whose title starts with the TC ID, read it, confirm it really asserts
      the expected result stated in the spec (exact values, not weaker checks), and confirm it passed.
      A test that exists but asserts less than the spec → FAIL ("weak test").
-   - local: run the npm script named in the TC (`check:env`, `smoke:mac`, `build:win-cross`) and record its output.
+   - local: run the package script named in the TC (`check:env`, `smoke:mac`, `build:win-cross`) and record its output.
      Missing prerequisites → FAIL with the `check:env` output (never skip).
    - lint: perform it (TC-M1-024: create the probe file, run lint, expect failure, delete the probe, run lint again, expect pass).
    - ci: check the latest `windows-build` workflow run for this branch with `gh run list` / `gh run view` when the branch

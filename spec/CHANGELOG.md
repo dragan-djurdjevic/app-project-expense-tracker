@@ -9,6 +9,11 @@ Every spec change gets an entry here **in the same commit** as the spec edit. Fo
 Bump rules: PATCH = wording/clarification with no behaviour change; MINOR = new or changed behaviour;
 MAJOR = reserved for post-POC breaking changes.
 
+## 0.3.0 — 2026-11-07
+- CHANGED AR-006: package manager npm → Yarn 4 via Corepack (`packageManager` pin, `nodeLinker: node-modules`,
+  `yarn install --immutable`); lockfile `yarn.lock`.
+- CHANGED AR-011, AR-012, M1 (deliverables 9/11, TC-M1-024/025/030/031): commands use `yarn`; env check verifies Yarn.
+
 ## 0.2.0 — 2026-11-07
 - CHANGED AN-2: rows = AN-4 row set; added Collected, Subcontractor share % (paid ÷ collected), Retained by company,
   Retained %; sub-rows show share of collected. Worked example AN-902 updated.

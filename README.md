@@ -15,4 +15,4 @@ Read [`CLAUDE.md`](CLAUDE.md) for the agent rules.
 - `/milestone M1` … `/milestone M5` — implement + validate the next milestone.
 - Change the spec → bump `spec/VERSION`, add a `spec/CHANGELOG.md` entry, commit → `/spec-sync`.
 
-Build and run instructions are added in M1.
+Package manager: Yarn 4 via Corepack (`corepack enable`). Build and run instructions are added in M1.

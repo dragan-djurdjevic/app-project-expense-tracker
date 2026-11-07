@@ -63,7 +63,7 @@ One file per use case in `src/core/usecases/<entity>/`, e.g. `createProject.ts`.
 `DomainError` = `{ code: string /* e.g. "BR-PRJ-003" */, field?: string, messageKey: string }`.
 The UI translates `messageKey` via i18n.
 
-## AR-006 Tech stack (major versions pinned; exact versions locked by committed `package-lock.json` / `Cargo.lock`)
+## AR-006 Tech stack (major versions pinned; exact versions locked by committed `yarn.lock` / `Cargo.lock`)
 | Concern | Choice |
 |---|---|
 | Shell | Tauri **2.x** (Rust stable via `rustup`, edition 2021; `src-tauri/rust-toolchain.toml` pins `channel = "stable"`, targets `aarch64-apple-darwin`, `x86_64-apple-darwin`, `x86_64-pc-windows-msvc`) |
@@ -77,7 +77,7 @@ The UI translates `messageKey` via i18n.
 | Unit/integration tests | Vitest **2.x** |
 | E2E | Playwright **1.x** (Chromium) against `vite preview` in **browser mode** (see AR-009) |
 | Lint/format | ESLint 9 (flat config) + `eslint-plugin-boundaries`, Prettier 3 |
-| Package manager | npm, Node **22 LTS** managed by **nvm** (`.nvmrc` = `22`; `package.json` `engines.node` = `>=22 <23`) |
+| Package manager | **Yarn 4.x** via Corepack (exact version pinned in `package.json` `packageManager`, set in M1 with `corepack use yarn@4`; `.yarnrc.yml`: `nodeLinker: node-modules`, `enableTelemetry: false`; installs always `yarn install --immutable` in CI and validation). Node **22 LTS** managed by **nvm** (`.nvmrc` = `22`; `package.json` `engines.node` = `>=22 <23`) |
 | CI | GitHub Actions, `windows-latest` |
 
 No other runtime dependencies may be added unless the spec lists them.
@@ -132,7 +132,7 @@ validation/          # validator reports Mx-report.md
   uses it instead of the app data dir for `tracker.db` and `documents/`. The frontend gets the effective path from
   the Tauri command `get_data_dir`. Used by the smoke tests (AR-012) so they never touch the user's real data.
 - **Browser mode** (no Tauri): `SqlJsDriver` in memory, `InMemoryDocumentStorage`. Used only by E2E tests and
-  `npm run dev:web`. Browser mode exposes `window.__TEST__ = { reset(), seed(fixtureName) }` **only** when
+  `yarn dev:web`. Browser mode exposes `window.__TEST__ = { reset(), seed(fixtureName) }` **only** when
   `import.meta.env.MODE === "e2e"`.
 
 ## AR-010 Startup sequence
@@ -141,7 +141,7 @@ validation/          # validator reports Mx-report.md
 3. Ensure `settings` row exists (default currency `EUR`, default VAT 2000 bp).
 4. Render app shell. If steps 1–2 fail, show a full-screen error with the message and the DB path.
 
-## AR-011 npm scripts (contract for agents)
+## AR-011 package.json scripts (contract for agents)
 | Script | Does |
 |---|---|
 | `dev` | `tauri dev` |
@@ -155,24 +155,24 @@ validation/          # validator reports Mx-report.md
 | `test` | typecheck + lint + unit + integration + e2e |
 | `smoke:mac` | `scripts/smoke-mac.mjs` — see AR-012 |
 | `build:win-cross` | `tauri build --runner cargo-xwin --target x86_64-pc-windows-msvc --bundles nsis` (cross-compiles the Windows installer on macOS) |
-| `check:env` | `scripts/check-env.mjs` — verifies AR-012 prerequisites |
+| `check:env` | `scripts/check-env.mjs` — verifies AR-012 prerequisites (incl. Node 22, Corepack enabled, Yarn version = `packageManager`) |
 | `verify` | `test` + `smoke:mac` + `build:win-cross` — everything the validator checks locally before a push |
-| `spec:trace` | script `scripts/trace.mjs`: lists every `TC-*` in `spec/milestones/*.md` and whether a test title with that ID exists; exits non-zero if any TC of a given milestone is missing (`npm run spec:trace -- M2`) |
+| `spec:trace` | script `scripts/trace.mjs`: lists every `TC-*` in `spec/milestones/*.md` and whether a test title with that ID exists; exits non-zero if any TC of a given milestone is missing (`yarn spec:trace M2`) |
 
 ## AR-012 Local verification before push
 Goal: confirm as much as possible locally; CI only adds what physically needs Windows.
 
 | Check | Where | How |
 |---|---|---|
-| Real Tauri app starts, SQLite plugin works, migrations run | local (macOS) | `npm run smoke:mac`: `tauri build --bundles app`; start `<bundle>.app/Contents/MacOS/<binary>` with `ARCHTRACKER_DATA_DIR=<fresh temp dir>`; wait up to 20 s; assert the process is alive, `tracker.db` exists and `sqlite3 tracker.db "SELECT version FROM schema_migrations"` prints `1`; kill the process; delete the temp dir. Exit code ≠ 0 on any failure. |
-| Windows installer builds | local (macOS cross-compile) | `npm run build:win-cross` produces `src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*-setup.exe`; validator asserts the file exists and is > 1 MB. Tauri marks this cross-compile as experimental; if it breaks for tooling reasons, the validator reports it as FAIL with the error, never silently skips it. |
+| Real Tauri app starts, SQLite plugin works, migrations run | local (macOS) | `yarn smoke:mac`: `tauri build --bundles app`; start `<bundle>.app/Contents/MacOS/<binary>` with `ARCHTRACKER_DATA_DIR=<fresh temp dir>`; wait up to 20 s; assert the process is alive, `tracker.db` exists and `sqlite3 tracker.db "SELECT version FROM schema_migrations"` prints `1`; kill the process; delete the temp dir. Exit code ≠ 0 on any failure. |
+| Windows installer builds | local (macOS cross-compile) | `yarn build:win-cross` produces `src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*-setup.exe`; validator asserts the file exists and is > 1 MB. Tauri marks this cross-compile as experimental; if it breaks for tooling reasons, the validator reports it as FAIL with the error, never silently skips it. |
 | Installer installs and app starts on Windows | CI (`windows-latest`) | Same checks as `smoke:mac`, but on the installed app after a silent NSIS install. Needs a push. |
 
 **Developer machine prerequisites (macOS):**
-- nvm with Node 22 (`nvm install` in the repo root reads `.nvmrc`).
+- nvm with Node 22 (`nvm install` in the repo root reads `.nvmrc`); `corepack enable` once per Node install (makes the pinned Yarn 4 available).
 - Rust via Homebrew `rustup` (`brew install rustup`, `rustup default stable`); `/opt/homebrew/opt/rustup/bin` and
   `~/.cargo/bin` on `PATH`.
 - Xcode Command Line Tools.
 - For `build:win-cross`: `brew install nsis llvm`, `cargo install --locked cargo-xwin`,
   `rustup target add x86_64-pc-windows-msvc`, and `$(brew --prefix llvm)/bin` on `PATH`.
-- `README.md` lists these; `scripts/check-env.mjs` (`npm run check:env`) verifies them and prints what's missing.
+- `README.md` lists these; `scripts/check-env.mjs` (`yarn check:env`) verifies them and prints what's missing.

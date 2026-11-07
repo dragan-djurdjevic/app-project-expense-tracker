@@ -18,10 +18,10 @@
   | integration | `tests/integration/**` (Vitest, real repositories on `SqlJsDriver`) |
   | e2e | `tests/e2e/**` (Playwright, browser mode) |
   | lint | performed by the validator agent (see TC description) |
-  | local | npm script run by the validator on the dev machine (no push needed) |
+  | local | package script run by the validator on the dev machine (no push needed) |
   | ci | step in `.github/workflows/windows-build.yml` named with the TC ID (needs a push; only for what requires Windows) |
   | manual | not automated; the validator lists it as `MANUAL` in the report for the user to confirm |
-- Test titles start with the TC ID so `npm run spec:trace` can find them. `lint`, `local`, `ci` and `manual` TCs are
+- Test titles start with the TC ID so `yarn spec:trace` can find them. `lint`, `local`, `ci` and `manual` TCs are
   traced by the validator instead.
 
 ## Coverage map (spec ID → milestone)
