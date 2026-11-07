@@ -78,3 +78,11 @@ None block the verdict.
   and `yarn build` pass, the `windows-installer` artifact contains `Architecture Project Tracker_0.1.0_x64-setup.exe`,
   and the step `TC-M1-032 Windows installer smoke test` succeeds. Note: GitHub will only list the workflow by file name once it exists on the default branch, but `on: push` still triggers it on the feature branch.
 - Optional (finding 2): with `ARCHTRACKER_DATA_DIR` set, run the app and click "Open folder" on Settings to see whether the opener scope blocks it.
+
+## Addendum — 2026-11-07 — CI round 1
+- First Windows CI run (42422593276) failed at `yarn test`: `TC-M1-010 0001_init.sql is exactly the normative DS-003 SQL`
+  (`expected undefined to be defined`). Cause: the Windows checkout converted line endings to CRLF, so the test's `\n`
+  regex didn't match the spec's SQL block. Not an app defect.
+- Fix: `.gitattributes` with `* text=auto eol=lf` (no change to `src/` or `tests/`; renormalising changed no files).
+- By user decision the R7 re-validation was shortened: `yarn verify` re-run locally (exit 0), and Windows CI
+  re-runs TC-M1-010 and TC-M1-032. Verdict unchanged: PASS-WITH-PENDING until that run is green.
