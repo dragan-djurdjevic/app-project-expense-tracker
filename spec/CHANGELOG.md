@@ -9,6 +9,16 @@ Every spec change gets an entry here **in the same commit** as the spec edit. Fo
 Bump rules: PATCH = wording/clarification with no behaviour change; MINOR = new or changed behaviour;
 MAJOR = reserved for post-POC breaking changes.
 
+## 0.3.5 — 2026-11-08
+- CHANGED AR-005: explicit validation order (field rules → reference rules → uniqueness; on update BR-GEN-007 and
+  immutability first).
+- CHANGED AR-004: `ContractRepository.existsByNumber` (ASCII case-insensitive, incl. archived) and `ContractListItem`.
+- CHANGED BR-CON-001…005: error code, field and messageKey per case; update input shape; re-check rule.
+- CHANGED UI-040, UI-052, BR-IVC-008: Invoiced/Paid include archived invoices; sort tie-break; filter options/labels.
+- CHANGED UI-041: default type, edit-form disabled controls, investor field, labels, titles, error texts.
+- CHANGED UI-032: Contracts tab behaviour (default tab, toolbar, preset project, archived project, card refresh).
+- CHANGED M3: `basic` fixture contract rows.
+
 ## 0.3.4 — 2026-11-08
 - CHANGED UI-010: Projects column counts non-archived projects of any status.
 - CHANGED AR-004: `ProjectRepository` exposes `availableYears()` (AN-000h), reused by `AnalyticsQuery` in M5.
