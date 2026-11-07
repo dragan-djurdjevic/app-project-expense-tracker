@@ -1,9 +1,13 @@
-// Spec: UI-001, UI-080
+// Spec: UI-001, UI-080, UI-010, UI-020, UI-030, UI-032
 import { Navigate, Route, Routes } from "react-router-dom";
 import { NAV_ITEMS } from "./navigation";
+import InvestorsScreen from "./screens/Investors/InvestorsScreen";
 import PlaceholderScreen from "./screens/Placeholder/PlaceholderScreen";
+import ProjectDetailScreen from "./screens/ProjectDetail/ProjectDetailScreen";
+import ProjectsScreen from "./screens/Projects/ProjectsScreen";
 import SettingsScreen from "./screens/Settings/SettingsScreen";
 import AppShellLayout from "./screens/Shell/AppShellLayout";
+import SubcontractorsScreen from "./screens/Subcontractors/SubcontractorsScreen";
 
 export function AppRoutes() {
   return (
@@ -19,6 +23,10 @@ export function AppRoutes() {
             />
           ) : null,
         )}
+        <Route path="/projects" element={<ProjectsScreen />} />
+        <Route path="/projects/:id" element={<ProjectDetailScreen />} />
+        <Route path="/investors" element={<InvestorsScreen />} />
+        <Route path="/subcontractors" element={<SubcontractorsScreen />} />
         <Route path="/settings" element={<SettingsScreen />} />
       </Route>
     </Routes>

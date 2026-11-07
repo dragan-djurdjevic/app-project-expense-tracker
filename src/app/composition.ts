@@ -1,9 +1,12 @@
-// Spec: AR-001, AR-002, AR-003, AR-009, AR-010, DS-001, DS-004
+// Spec: AR-001, AR-002, AR-003, AR-005, AR-009, AR-010, DS-001, DS-004, UI-010, UI-020, UI-030, UI-032
 import wasmUrl from "sql.js/dist/sql-wasm.wasm?url";
 import { bundledMigrations } from "../adapters/sqlite/bundledMigrations";
 import { ensureSettingsRow, runMigrations } from "../adapters/sqlite/runMigrations";
 import type { SqlDriver } from "../adapters/sqlite/SqlDriver";
+import { SqliteInvestorRepository } from "../adapters/sqlite/SqliteInvestorRepository";
+import { SqliteProjectRepository } from "../adapters/sqlite/SqliteProjectRepository";
 import { SqliteSettingsRepository } from "../adapters/sqlite/SqliteSettingsRepository";
+import { SqliteSubcontractorRepository } from "../adapters/sqlite/SqliteSubcontractorRepository";
 import { SqlJsDriver } from "../adapters/sqlite/SqlJsDriver";
 import { FsDocumentStorage } from "../adapters/storage/FsDocumentStorage";
 import { InMemoryDocumentStorage } from "../adapters/storage/InMemoryDocumentStorage";
@@ -12,8 +15,27 @@ import { UuidIdGenerator } from "../adapters/system/UuidIdGenerator";
 import { getDataDir, isTauriRuntime, joinPath, openInOs } from "../adapters/tauri/platform";
 import { TauriSqlDriver } from "../adapters/tauri/TauriSqlDriver";
 import type { DocumentStorage } from "../core/ports/DocumentStorage";
+import { makeArchiveInvestor } from "../core/usecases/investor/archiveInvestor";
+import { makeCreateInvestor } from "../core/usecases/investor/createInvestor";
+import { makeGetInvestor } from "../core/usecases/investor/getInvestor";
+import { makeListInvestors } from "../core/usecases/investor/listInvestors";
+import { makeRestoreInvestor } from "../core/usecases/investor/restoreInvestor";
+import { makeUpdateInvestor } from "../core/usecases/investor/updateInvestor";
+import { makeArchiveProject } from "../core/usecases/project/archiveProject";
+import { makeCreateProject } from "../core/usecases/project/createProject";
+import { makeGetAvailableYears } from "../core/usecases/project/getAvailableYears";
+import { makeGetProject } from "../core/usecases/project/getProject";
+import { makeListProjects } from "../core/usecases/project/listProjects";
+import { makeRestoreProject } from "../core/usecases/project/restoreProject";
+import { makeUpdateProject } from "../core/usecases/project/updateProject";
 import { makeGetSettings } from "../core/usecases/settings/getSettings";
 import { makeUpdateSettings } from "../core/usecases/settings/updateSettings";
+import { makeArchiveSubcontractor } from "../core/usecases/subcontractor/archiveSubcontractor";
+import { makeCreateSubcontractor } from "../core/usecases/subcontractor/createSubcontractor";
+import { makeGetSubcontractor } from "../core/usecases/subcontractor/getSubcontractor";
+import { makeListSubcontractors } from "../core/usecases/subcontractor/listSubcontractors";
+import { makeRestoreSubcontractor } from "../core/usecases/subcontractor/restoreSubcontractor";
+import { makeUpdateSubcontractor } from "../core/usecases/subcontractor/updateSubcontractor";
 import { StartupError, type Container, type RuntimeInfo } from "./Container";
 import { makeTestHooks } from "./testHooks";
 
@@ -59,15 +81,37 @@ export async function createContainer(): Promise<Container> {
   void documents;
 
   const settingsRepo = new SqliteSettingsRepository(db);
+  const investorRepo = new SqliteInvestorRepository(db, clock);
+  const subcontractorRepo = new SqliteSubcontractorRepository(db, clock);
+  const projectRepo = new SqliteProjectRepository(db, clock);
 
   if (inMemoryDocuments && import.meta.env.MODE === "e2e") {
-    window.__TEST__ = makeTestHooks(db, inMemoryDocuments);
+    window.__TEST__ = makeTestHooks(db, inMemoryDocuments, (await import("./e2eFixtures")).e2eFixtures);
   }
 
   return {
     useCases: {
       getSettings: makeGetSettings({ settingsRepo }),
       updateSettings: makeUpdateSettings({ settingsRepo }),
+      listInvestors: makeListInvestors({ investorRepo, projectRepo }),
+      getInvestor: makeGetInvestor({ investorRepo }),
+      createInvestor: makeCreateInvestor({ investorRepo, clock, ids }),
+      updateInvestor: makeUpdateInvestor({ investorRepo, clock }),
+      archiveInvestor: makeArchiveInvestor({ investorRepo }),
+      restoreInvestor: makeRestoreInvestor({ investorRepo }),
+      listSubcontractors: makeListSubcontractors({ subcontractorRepo }),
+      getSubcontractor: makeGetSubcontractor({ subcontractorRepo }),
+      createSubcontractor: makeCreateSubcontractor({ subcontractorRepo, clock, ids }),
+      updateSubcontractor: makeUpdateSubcontractor({ subcontractorRepo, clock }),
+      archiveSubcontractor: makeArchiveSubcontractor({ subcontractorRepo }),
+      restoreSubcontractor: makeRestoreSubcontractor({ subcontractorRepo }),
+      listProjects: makeListProjects({ projectRepo, investorRepo }),
+      getProject: makeGetProject({ projectRepo, investorRepo }),
+      createProject: makeCreateProject({ projectRepo, investorRepo, clock, ids }),
+      updateProject: makeUpdateProject({ projectRepo, investorRepo, clock }),
+      archiveProject: makeArchiveProject({ projectRepo }),
+      restoreProject: makeRestoreProject({ projectRepo }),
+      getAvailableYears: makeGetAvailableYears({ projectRepo, clock }),
     },
     runtime,
   };
