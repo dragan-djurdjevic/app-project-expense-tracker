@@ -43,7 +43,7 @@ No change in `src/core/**` or `src/ui/**` is allowed for such a switch. Therefor
 | `ProjectRepository` | same shape (without `existsByVat`); list filter supports `investorId`, `status`, `year` (AN-3 rule) |
 | `ContractRepository` | same shape; list filter supports `projectId`, `type`, `subcontractorId` |
 | `InvoiceRepository` | same shape; list filter supports `contractId`, `projectId`, `status` |
-| `AnalyticsQuery` | `contractedVsCollected(year, mode)`, `subcontractorPayments(year, mode)`, `projectsInYear(year)`, `netPerProject(year, mode)`, `availableYears()` |
+| `AnalyticsQuery` | `contractedVsCollected(year, mode)`, `subcontractorPayments(year, mode)`, `projectsInYear(year)`, `netPerProject(year, mode)`, `budgetRealisation(statuses)`, `availableYears()` |
 | `DocumentStorage` | `save(bytes, originalName): Promise<StoredDocumentRef>`, `open(ref)`, `remove(ref)`, `exists(ref)` |
 | `Clock` | `now(): Date` (for timestamps; makes tests deterministic) |
 | `IdGenerator` | `next(): string` (UUID v4; injectable for tests) |
@@ -66,7 +66,7 @@ The UI translates `messageKey` via i18n.
 ## AR-006 Tech stack (major versions pinned; exact versions locked by committed `package-lock.json` / `Cargo.lock`)
 | Concern | Choice |
 |---|---|
-| Shell | Tauri **2.x** (Rust stable, edition 2021) |
+| Shell | Tauri **2.x** (Rust stable via `rustup`, edition 2021; `src-tauri/rust-toolchain.toml` pins `channel = "stable"`, targets `aarch64-apple-darwin`, `x86_64-apple-darwin`, `x86_64-pc-windows-msvc`) |
 | Language | TypeScript **5.x**, `strict: true` |
 | UI | React **18.x**, React Router **6.x** |
 | UI kit | Mantine **7.x** (tables, forms, date inputs, modals, notifications) |
@@ -77,7 +77,7 @@ The UI translates `messageKey` via i18n.
 | Unit/integration tests | Vitest **2.x** |
 | E2E | Playwright **1.x** (Chromium) against `vite preview` in **browser mode** (see AR-009) |
 | Lint/format | ESLint 9 (flat config) + `eslint-plugin-boundaries`, Prettier 3 |
-| Package manager | npm (Node **20 LTS**) |
+| Package manager | npm, Node **22 LTS** managed by **nvm** (`.nvmrc` = `22`; `package.json` `engines.node` = `>=22 <23`) |
 | CI | GitHub Actions, `windows-latest` |
 
 No other runtime dependencies may be added unless the spec lists them.
@@ -128,6 +128,9 @@ validation/          # validator reports Mx-report.md
 `src/app/composition.ts` detects the runtime:
 - **Tauri mode** (`window.__TAURI_INTERNALS__` present): `TauriSqlDriver` with DB file `tracker.db` in the app data
   dir, `FsDocumentStorage` writing to `<appData>/documents/`.
+- **Data dir override:** if the environment variable `ARCHTRACKER_DATA_DIR` is set when the app starts, the Rust side
+  uses it instead of the app data dir for `tracker.db` and `documents/`. The frontend gets the effective path from
+  the Tauri command `get_data_dir`. Used by the smoke tests (AR-012) so they never touch the user's real data.
 - **Browser mode** (no Tauri): `SqlJsDriver` in memory, `InMemoryDocumentStorage`. Used only by E2E tests and
   `npm run dev:web`. Browser mode exposes `window.__TEST__ = { reset(), seed(fixtureName) }` **only** when
   `import.meta.env.MODE === "e2e"`.
@@ -150,4 +153,26 @@ validation/          # validator reports Mx-report.md
 | `test:integration` | Vitest `tests/integration` |
 | `test:e2e` | builds in `e2e` mode, runs Playwright |
 | `test` | typecheck + lint + unit + integration + e2e |
+| `smoke:mac` | `scripts/smoke-mac.mjs` — see AR-012 |
+| `build:win-cross` | `tauri build --runner cargo-xwin --target x86_64-pc-windows-msvc --bundles nsis` (cross-compiles the Windows installer on macOS) |
+| `check:env` | `scripts/check-env.mjs` — verifies AR-012 prerequisites |
+| `verify` | `test` + `smoke:mac` + `build:win-cross` — everything the validator checks locally before a push |
 | `spec:trace` | script `scripts/trace.mjs`: lists every `TC-*` in `spec/milestones/*.md` and whether a test title with that ID exists; exits non-zero if any TC of a given milestone is missing (`npm run spec:trace -- M2`) |
+
+## AR-012 Local verification before push
+Goal: confirm as much as possible locally; CI only adds what physically needs Windows.
+
+| Check | Where | How |
+|---|---|---|
+| Real Tauri app starts, SQLite plugin works, migrations run | local (macOS) | `npm run smoke:mac`: `tauri build --bundles app`; start `<bundle>.app/Contents/MacOS/<binary>` with `ARCHTRACKER_DATA_DIR=<fresh temp dir>`; wait up to 20 s; assert the process is alive, `tracker.db` exists and `sqlite3 tracker.db "SELECT version FROM schema_migrations"` prints `1`; kill the process; delete the temp dir. Exit code ≠ 0 on any failure. |
+| Windows installer builds | local (macOS cross-compile) | `npm run build:win-cross` produces `src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*-setup.exe`; validator asserts the file exists and is > 1 MB. Tauri marks this cross-compile as experimental; if it breaks for tooling reasons, the validator reports it as FAIL with the error, never silently skips it. |
+| Installer installs and app starts on Windows | CI (`windows-latest`) | Same checks as `smoke:mac`, but on the installed app after a silent NSIS install. Needs a push. |
+
+**Developer machine prerequisites (macOS):**
+- nvm with Node 22 (`nvm install` in the repo root reads `.nvmrc`).
+- Rust via Homebrew `rustup` (`brew install rustup`, `rustup default stable`); `/opt/homebrew/opt/rustup/bin` and
+  `~/.cargo/bin` on `PATH`.
+- Xcode Command Line Tools.
+- For `build:win-cross`: `brew install nsis llvm`, `cargo install --locked cargo-xwin`,
+  `rustup target add x86_64-pc-windows-msvc`, and `$(brew --prefix llvm)/bin` on `PATH`.
+- `README.md` lists these; `scripts/check-env.mjs` (`npm run check:env`) verifies them and prints what's missing.

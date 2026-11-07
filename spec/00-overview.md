@@ -21,7 +21,7 @@ A single user per computer. No login, no roles, no multi-user concurrency.
 - CRUD for investors, subcontractors, projects, contracts, invoices.
 - Soft delete (archive) for all entities.
 - PDF attachment per invoice (attach, open, replace, remove).
-- Analytics views AN-1 … AN-4 (see `05-analytics.md`), filterable by year.
+- Analytics views AN-1 … AN-4 (see `05-analytics.md`), filterable by year, and AN-5 budget realisation (cumulative).
 - English UI, prepared for translation (i18n).
 - Local SQLite database stored in the OS app-data directory.
 

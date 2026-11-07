@@ -22,8 +22,9 @@ optionally a validator report listing failures to fix.
 6. Implement per `spec/01-architecture.md`: layers, naming, `// Spec:` headers, i18n, `data-testid`s from `spec/04-ui.md`.
 7. Write the automated tests for every TC of level unit / integration / e2e / ci in scope; titles start with the TC ID.
    Expected values come from the spec verbatim (for M5: AN-900…AN-904).
-8. Run `npm run typecheck`, `npm run lint`, `npm run test:unit`, `npm run test:integration`, `npm run test:e2e`,
-   `npm run spec:trace -- <Mx>`. Fix failures within scope.
+8. Run `npm run verify` (from M1 on) and `npm run spec:trace -- <Mx>`. Fix failures within scope.
+   Use Node via nvm (`nvm use`) and Rust via rustup; if a tool is missing, report it rather than installing system
+   software yourself.
 9. If a test can only pass by deviating from the spec, do **not** deviate: stop and propose a spec amendment (R6).
 10. Do not update `spec-lock.json` and do not commit — that happens after the validator passes.
 

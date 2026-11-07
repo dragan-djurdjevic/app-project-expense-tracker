@@ -34,12 +34,28 @@ Columns: Project, Investor, Contracted, Collected, Collected %.
 Footer: `Projects: <row count> (contracted in year: <count of rows with an INCOMING contract dated in Y>)`,
 Σ Contracted, Σ Collected, footer %.
 
-## AN-2 Subcontractor payments (per project)
-Rows: every project p where it has an OUTGOING contract dated in Y **or** `paidOut(p,Y) > 0`.
-Columns: Project, Contracted to subcontractors, Paid, Paid %.
-Expandable row: same columns per subcontractor of that project (subcontractor name instead of project; same rules
-restricted to that subcontractor's OUTGOING contracts), sorted by subcontractor name.
-Footer: Σ Contracted to subcontractors, Σ Paid, footer % (this is the per-year summary).
+## AN-2 Subcontractor payments and company share (per project)
+Answers two questions per project: *how much of the money contracted with subcontractors has been paid to them*,
+and *of the money collected for the project, how much went to subcontractors and how much stayed with the company*.
+
+Rows: every project p that is a row of AN-1 **or** has an OUTGOING contract dated in Y **or** `paidOut(p,Y) > 0`
+(same row set as AN-4).
+Columns:
+| Column | Formula |
+|---|---|
+| Project | |
+| Contracted to subcontractors | `contractedOut(p,Y)` |
+| Paid to subcontractors | `paidOut(p,Y)` |
+| Paid % of contracted | Paid ÷ Contracted to subcontractors |
+| Collected from investor | `collected(p,Y)` |
+| Subcontractor share % | Paid ÷ Collected |
+| Retained by company | Collected − Paid (negative shown in red) |
+| Retained % | Retained ÷ Collected |
+
+Expandable row (only for projects with at least one OUTGOING contract or payment in Y): one sub-row per
+subcontractor of that project, sorted by subcontractor name, showing Contracted, Paid, Paid % of contracted and
+Subcontractor share % (that subcontractor's paid ÷ the project's collected). Retained columns are blank on sub-rows.
+Footer (per-year summary): Σ of every column, with footer percentages computed from footer totals (AN-000e).
 
 ## AN-3 Projects per year
 A project belongs to year Y if `year(project.deadline) = Y` **or** it has any contract (any type, incl. archived)
@@ -53,6 +69,29 @@ Rows: union of AN-1 rows and AN-2 rows for Y.
 Columns: Project, Collected (= `collected(p,Y)`), Paid to subcontractors (= `paidOut(p,Y)`),
 Net (= Collected − Paid; negative shown in red), Net margin % (= Net / Collected, computed from net values).
 Footer: Σ Collected, Σ Paid, Σ Net, footer margin %.
+
+## AN-5 Budget realisation (per project, cumulative to date)
+Compares each project's **budget** with what has actually been contracted, invoiced and collected from the investor.
+There is no year filter; all dates count. Filter: project status (multi-select, default: all).
+Net values only (budget and contracts are net); no Gross toggle.
+
+Rows: all projects (incl. archived, per AN-000a), sorted by name.
+| Column | Formula |
+|---|---|
+| Project, Investor, Status | |
+| Budget | `project.budget` (null → "—") |
+| Contracted | Σ INCOMING contract values (all dates) |
+| Contracted % of budget | Contracted ÷ Budget |
+| Invoiced | Σ ISSUED + PAID invoice values on INCOMING contracts (all dates) |
+| Collected | Σ PAID invoice values on INCOMING contracts (all dates) |
+| Realisation % of budget | Collected ÷ Budget — shown as a progress bar plus number; bar is red when > 100 % |
+| Realisation % of contracted | Collected ÷ Contracted |
+| Remaining budget | Budget − Collected (null budget → "—"; negative shown in red) |
+
+Percent columns with a null or 0 budget → "—".
+Footer: Σ Budget (non-null only), Σ Contracted, Σ Invoiced, Σ Collected, Σ Remaining budget (projects with a budget
+only). Footer "% of budget" percentages use only projects with a non-null budget in **both** numerator and
+denominator; "Realisation % of contracted" uses all rows.
 
 ---
 
@@ -118,15 +157,20 @@ All amounts below in EUR (minor units in the fixture = amount × 100). All invoi
 Gross mode, 2025: Collected Office Tower 120,000.00, Villa Lake 120,000.00, footer 240,000.00; percentages unchanged.
 
 ### AN-902 Expected AN-2
-| Y | Project / Subcontractor | Contracted out | Paid | % |
-|---|---|---|---|---|
-| 2025 | Villa Lake | 20,000.00 | 20,000.00 | 100.0 % |
-| 2025 | ↳ Struct Eng | 20,000.00 | 20,000.00 | 100.0 % |
-| **2025 footer** | | **20,000.00** | **20,000.00** | **100.0 %** |
-| 2026 | Office Tower | 120,000.00 | 40,000.00 | 33.3 % |
-| 2026 | ↳ HVAC Pro | 40,000.00 | 10,000.00 | 25.0 % |
-| 2026 | ↳ Struct Eng | 80,000.00 | 30,000.00 | 37.5 % |
-| **2026 footer** | | **120,000.00** | **40,000.00** | **33.3 %** |
+| Y | Project / Subcontractor | Contracted out | Paid | Paid % of contr. | Collected | Sub. share % | Retained | Retained % |
+|---|---|---|---|---|---|---|---|---|
+| 2025 | Office Tower | 0.00 | 0.00 | — | 100,000.00 | 0.0 % | 100,000.00 | 100.0 % |
+| 2025 | Villa Lake | 20,000.00 | 20,000.00 | 100.0 % | 100,000.00 | 20.0 % | 80,000.00 | 80.0 % |
+| 2025 | ↳ Struct Eng | 20,000.00 | 20,000.00 | 100.0 % | | 20.0 % | | |
+| **2025 footer** | | **20,000.00** | **20,000.00** | **100.0 %** | **200,000.00** | **10.0 %** | **180,000.00** | **90.0 %** |
+| 2026 | Office Tower | 120,000.00 | 40,000.00 | 33.3 % | 150,000.00 | 26.7 % | 110,000.00 | 73.3 % |
+| 2026 | ↳ HVAC Pro | 40,000.00 | 10,000.00 | 25.0 % | | 6.7 % | | |
+| 2026 | ↳ Struct Eng | 80,000.00 | 30,000.00 | 37.5 % | | 20.0 % | | |
+| 2026 | School Annex | 0.00 | 0.00 | — | 15,000.00 | 0.0 % | 15,000.00 | 100.0 % |
+| 2026 | Villa Lake | 0.00 | 0.00 | — | 5,000.00 | 0.0 % | 5,000.00 | 100.0 % |
+| **2026 footer** | | **120,000.00** | **40,000.00** | **33.3 %** | **170,000.00** | **23.5 %** | **130,000.00** | **76.5 %** |
+
+Office Tower 2025, School Annex 2026 and Villa Lake 2026 have no expandable sub-rows.
 
 ### AN-903 Expected AN-3
 | Y | Projects | Footer |
@@ -147,3 +191,16 @@ Gross mode, 2025: Collected Office Tower 120,000.00, Villa Lake 120,000.00, foot
 | **2026 footer** | | **170,000.00** | **40,000.00** | **130,000.00** | **76.5 %** |
 
 Gross mode 2026 footer: Collected 204,000.00, Paid 48,000.00, Net 156,000.00, Margin 76.5 %.
+
+### AN-905 Expected AN-5 (all statuses)
+| Project | Budget | Contracted | Contr. % budget | Invoiced | Collected | Real. % budget | Real. % contracted | Remaining |
+|---|---|---|---|---|---|---|---|---|
+| Library | — | 0.00 | — | 0.00 | 0.00 | — | — | — |
+| Office Tower | 600,000.00 | 550,000.00 | 91.7 % | 350,000.00 | 250,000.00 | 41.7 % | 45.5 % | 350,000.00 |
+| School Annex (Archived) | 35,000.00 | 30,000.00 | 85.7 % | 15,000.00 | 15,000.00 | 42.9 % | 50.0 % | 20,000.00 |
+| Villa Lake | 120,000.00 | 100,000.00 | 83.3 % | 105,000.00 | 105,000.00 | 87.5 % | 105.0 % | 15,000.00 |
+| **Footer** | **755,000.00** | **680,000.00** | **90.1 %** | **470,000.00** | **370,000.00** | **49.0 %** | **54.4 %** | **385,000.00** |
+
+Notes: Office Tower Invoiced = V4 + V5 (PAID) + V6 (ISSUED); V7 (CANCELLED) excluded. Footer "Contr. % budget" =
+680,000 ÷ 755,000 (Library has no budget and contracted 0). With status filter `ACTIVE` only: rows Office Tower and
+School Annex; footer Budget 635,000.00, Collected 265,000.00, Real. % budget 41.7 %.

@@ -21,6 +21,8 @@ You are the **validator**. You did not write the code and you must not trust the
    - unit/integration/e2e: find the test whose title starts with the TC ID, read it, confirm it really asserts
      the expected result stated in the spec (exact values, not weaker checks), and confirm it passed.
      A test that exists but asserts less than the spec → FAIL ("weak test").
+   - local: run the npm script named in the TC (`check:env`, `smoke:mac`, `build:win-cross`) and record its output.
+     Missing prerequisites → FAIL with the `check:env` output (never skip).
    - lint: perform it (TC-M1-024: create the probe file, run lint, expect failure, delete the probe, run lint again, expect pass).
    - ci: check the latest `windows-build` workflow run for this branch with `gh run list` / `gh run view` when the branch
      is pushed; if it isn't pushed or there is no run, mark `PENDING-CI` (not PASS).
@@ -38,7 +40,7 @@ You are the **validator**. You did not write the code and you must not trust the
 ## Report `validation/<Mx>-report.md`
 ```
 # <Mx> validation — <date> — spec <version> @ <short sha>
-Verdict: PASS | FAIL | PASS-WITH-PENDING (only CI/MANUAL items open)
+Verdict: PASS | FAIL | PASS-WITH-PENDING (only CI/MANUAL items open; every local TC must have passed)
 
 ## Gates
 | Gate | Result | Notes |
