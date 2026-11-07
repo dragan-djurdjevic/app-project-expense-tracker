@@ -1,0 +1,63 @@
+{
+  "name": "archtracker",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22 <23"
+  },
+  "scripts": {
+    "dev": "tauri dev",
+    "dev:web": "vite",
+    "build": "tauri build",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src tests",
+    "test:unit": "vitest run --dir tests/unit",
+    "test:integration": "vitest run --dir tests/integration",
+    "test:e2e": "vite build --mode e2e --outDir dist-e2e && playwright test",
+    "test": "yarn typecheck && yarn lint && yarn test:unit && yarn test:integration && yarn test:e2e",
+    "smoke:mac": "node scripts/smoke-mac.mjs",
+    "build:win-cross": "tauri build --runner cargo-xwin --target x86_64-pc-windows-msvc --bundles nsis",
+    "check:env": "node scripts/check-env.mjs",
+    "verify": "yarn test && yarn smoke:mac && yarn build:win-cross",
+    "spec:trace": "node scripts/trace.mjs"
+  },
+  "packageManager": "yarn@4.18.1+sha512.b2e1e7524f654f2749d32b4ebcb4622473cb5bcbc485df2007e12a154e50162a4d795526768bc5f5b8f81717bfd79deb2472813d86fb5ae2eb551fa9c872b08f",
+  "dependencies": {
+    "@mantine/core": "^7",
+    "@mantine/dates": "^7",
+    "@mantine/form": "^7",
+    "@mantine/hooks": "^7",
+    "@mantine/modals": "^7",
+    "@mantine/notifications": "^7",
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-dialog": "^2",
+    "@tauri-apps/plugin-fs": "^2",
+    "@tauri-apps/plugin-opener": "^2",
+    "@tauri-apps/plugin-sql": "^2",
+    "dayjs": "^1",
+    "i18next": "^26.7.2",
+    "react": "^18",
+    "react-dom": "^18",
+    "react-i18next": "^17.1.13",
+    "react-router-dom": "^6",
+    "sql.js": "^1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9",
+    "@playwright/test": "^1",
+    "@tauri-apps/cli": "^2",
+    "@types/node": "^22",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "@types/sql.js": "^1.4.11",
+    "@vitejs/plugin-react": "^4",
+    "eslint": "^9",
+    "eslint-plugin-boundaries": "^7.4.2",
+    "prettier": "^3",
+    "typescript": "^5",
+    "typescript-eslint": "^8",
+    "vite": "^5",
+    "vitest": "^2"
+  }
+}

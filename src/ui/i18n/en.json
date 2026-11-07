@@ -1,0 +1,42 @@
+{
+  "common": {
+    "appTitle": "Architecture Project Tracker",
+    "comingIn": "Coming in {{milestone}}",
+    "save": "Save",
+    "saved": "Saved",
+    "startupError": {
+      "title": "The application could not start",
+      "dbPath": "Database file"
+    }
+  },
+  "nav": {
+    "projects": "Projects",
+    "contracts": "Contracts",
+    "invoices": "Invoices",
+    "investors": "Investors",
+    "subcontractors": "Subcontractors",
+    "analytics": "Analytics",
+    "analyticsContracted": "Contracted vs collected",
+    "analyticsSubcontractors": "Subcontractor payments",
+    "analyticsProjects": "Projects per year",
+    "analyticsNet": "Net result",
+    "analyticsBudget": "Budget realisation",
+    "settings": "Settings"
+  },
+  "settings": {
+    "currency": "Currency",
+    "defaultVatRate": "Default VAT rate (%)",
+    "dbPath": "Database file",
+    "documentsPath": "Documents folder",
+    "openFolder": "Open folder",
+    "inMemory": "In-memory (browser mode)"
+  },
+  "errors": {
+    "required": "This field is required.",
+    "format": "Invalid format.",
+    "money": {
+      "invalid": "Invalid amount."
+    },
+    "unexpected": "Unexpected error: {{message}}"
+  }
+}

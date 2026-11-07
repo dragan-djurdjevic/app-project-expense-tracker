@@ -1,0 +1,87 @@
+# Spec: AR-006, AR-011, AR-012, OV-003
+name: windows-build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  windows-build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Install Playwright Chromium
+        run: yarn playwright install chromium
+
+      - name: Rust toolchain (from src-tauri/rust-toolchain.toml)
+        working-directory: src-tauri
+        run: rustup show
+
+      - name: Test (typecheck, lint, unit, integration, e2e)
+        run: yarn test
+
+      - name: Build NSIS installer
+        run: yarn build
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: src-tauri/target/release/bundle/nsis/*-setup.exe
+          if-no-files-found: error
+
+      - name: TC-M1-032 Windows installer smoke test
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $installer = Get-ChildItem "src-tauri/target/release/bundle/nsis/*-setup.exe" | Select-Object -First 1
+          Write-Host "Installing $($installer.Name) silently"
+          Start-Process -FilePath $installer.FullName -ArgumentList "/S" -Wait
+
+          $installDir = Join-Path $env:LOCALAPPDATA "Architecture Project Tracker"
+          if (-not (Test-Path $installDir)) { $installDir = Join-Path $env:ProgramFiles "Architecture Project Tracker" }
+          $exe = Get-ChildItem $installDir -Filter *.exe | Where-Object { $_.Name -notlike "uninstall*" } | Select-Object -First 1
+          if (-not $exe) { throw "Installed app executable not found in $installDir" }
+
+          $dataDir = Join-Path $env:RUNNER_TEMP ("archtracker-smoke-" + [guid]::NewGuid())
+          New-Item -ItemType Directory -Path $dataDir | Out-Null
+          $env:ARCHTRACKER_DATA_DIR = $dataDir
+          $db = Join-Path $dataDir "tracker.db"
+          Write-Host "Starting $($exe.FullName) with ARCHTRACKER_DATA_DIR=$dataDir"
+          $proc = Start-Process -FilePath $exe.FullName -PassThru
+
+          $version = $null
+          $deadline = (Get-Date).AddSeconds(20)
+          while ((Get-Date) -lt $deadline) {
+            if ($proc.HasExited) { break }
+            if (Test-Path $db) {
+              $version = python -c "import sqlite3,sys; c=sqlite3.connect(sys.argv[1]); print(','.join(str(r[0]) for r in c.execute('SELECT version FROM schema_migrations')))" $db 2>$null
+              if ($version -eq "1") { break }
+            }
+            Start-Sleep -Milliseconds 500
+          }
+
+          try {
+            if ($proc.HasExited) { throw "App exited early with code $($proc.ExitCode)" }
+            if (-not (Test-Path $db)) { throw "tracker.db not created within 20 s" }
+            if ($version -ne "1") { throw "schema_migrations versions = '$version', expected '1'" }
+            Write-Host "App alive, tracker.db created, migration version 1 recorded"
+          } finally {
+            if (-not $proc.HasExited) { Stop-Process -Id $proc.Id -Force }
+            Start-Sleep -Seconds 1
+            $uninstaller = Join-Path $installDir "uninstall.exe"
+            if (Test-Path $uninstaller) { Start-Process -FilePath $uninstaller -ArgumentList "/S" -Wait }
+            Remove-Item -Recurse -Force $dataDir -ErrorAction SilentlyContinue
+          }
