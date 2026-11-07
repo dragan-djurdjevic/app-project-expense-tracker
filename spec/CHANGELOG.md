@@ -9,6 +9,17 @@ Every spec change gets an entry here **in the same commit** as the spec edit. Fo
 Bump rules: PATCH = wording/clarification with no behaviour change; MINOR = new or changed behaviour;
 MAJOR = reserved for post-POC breaking changes.
 
+## 0.3.4 — 2026-11-08
+- CHANGED UI-010: Projects column counts non-archived projects of any status.
+- CHANGED AR-004: `ProjectRepository` exposes `availableYears()` (AN-000h), reused by `AnalyticsQuery` in M5.
+- CHANGED AR-005: `get` on an unknown id returns `null`; `update`/`archive`/`restore` on an unknown id throw;
+  validation returns the first failing rule in form field order.
+- CHANGED BR-GEN-004: restoring an active record is a no-op success.
+- CHANGED UI-002b: edit-form pickers also show the currently referenced (possibly archived) parent; read-only view
+  title is "<Entity>".
+- CHANGED UI-002a: "No records match your search." only when search text is non-empty.
+- CHANGED UI-032: screen title is the project name; summary cards show 0 until M3/M4.
+
 ## 0.3.3 — 2026-11-07
 - CHANGED M1 deliverable 11: CI triggers are `push` to `main`, `pull_request` and `workflow_dispatch`, so a PR branch
   runs CI once per update instead of twice.

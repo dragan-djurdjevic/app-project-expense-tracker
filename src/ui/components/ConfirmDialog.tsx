@@ -1,0 +1,42 @@
+// Spec: UI-002a
+import { Button, Group, Modal, Stack, Text } from "@mantine/core";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+
+/** Archive confirmation (`data-testid="confirm-archive"`). */
+export function ConfirmArchiveDialog({
+  name,
+  onConfirm,
+  onCancel,
+}: {
+  /** Name of the record to archive; null = dialog closed. */
+  name: string | null;
+  onConfirm: () => Promise<void>;
+  onCancel: () => void;
+}) {
+  const { t } = useTranslation();
+  const [busy, setBusy] = useState(false);
+  const confirm = async () => {
+    setBusy(true);
+    try {
+      await onConfirm();
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Modal opened={name !== null} onClose={onCancel} title={t("common.confirmArchive.title")} centered>
+      <Stack data-testid="confirm-archive">
+        <Text>{t("common.confirmArchive.message", { name: name ?? "" })}</Text>
+        <Group justify="flex-end">
+          <Button variant="default" onClick={onCancel}>
+            {t("common.cancel")}
+          </Button>
+          <Button color="red" loading={busy} onClick={() => void confirm()}>
+            {t("common.archive")}
+          </Button>
+        </Group>
+      </Stack>
+    </Modal>
+  );
+}

@@ -1,13 +1,13 @@
 // Spec: UI-001, UI-080, UI-090, AR-009
 import { expect, test, type Page } from "@playwright/test";
 
-/** UI-001 sidebar items in order: label, route, data-testid, placeholder milestone. */
+/** UI-001 sidebar items in order: label, route, data-testid, placeholder (null once the screen is implemented). */
 const NAV = [
-  { label: "Projects", route: "/projects", testId: "nav-projects", placeholder: "Coming in M2" },
+  { label: "Projects", route: "/projects", testId: "nav-projects", placeholder: null },
   { label: "Contracts", route: "/contracts", testId: "nav-contracts", placeholder: "Coming in M3" },
   { label: "Invoices", route: "/invoices", testId: "nav-invoices", placeholder: "Coming in M4" },
-  { label: "Investors", route: "/investors", testId: "nav-investors", placeholder: "Coming in M2" },
-  { label: "Subcontractors", route: "/subcontractors", testId: "nav-subcontractors", placeholder: "Coming in M2" },
+  { label: "Investors", route: "/investors", testId: "nav-investors", placeholder: null },
+  { label: "Subcontractors", route: "/subcontractors", testId: "nav-subcontractors", placeholder: null },
   {
     label: "Contracted vs collected",
     route: "/analytics/contracted-vs-collected",

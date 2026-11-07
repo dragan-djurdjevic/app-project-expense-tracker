@@ -1,4 +1,4 @@
-// Spec: AR-009
+// Spec: AR-009, AR-007
 import type { SqlDriver } from "../adapters/sqlite/SqlDriver";
 import type { InMemoryDocumentStorage } from "../adapters/storage/InMemoryDocumentStorage";
 
@@ -14,12 +14,17 @@ declare global {
   }
 }
 
-/** Named fixtures usable via `window.__TEST__.seed(name)`; fixtures are added by later milestones. */
-export const fixtures: Record<string, (db: SqlDriver) => Promise<void>> = {};
+/** A named seed fixture (`tests/fixtures/*.ts`) writing rows directly through the SqlDriver. */
+export type Fixture = (db: SqlDriver) => Promise<void>;
 
 const TABLES_CHILD_FIRST = ["invoice", "contract", "project", "subcontractor", "investor", "settings"];
 
-export function makeTestHooks(db: SqlDriver, documents: InMemoryDocumentStorage): TestHooks {
+/** Hooks for E2E tests; `fixtures` are the fixtures usable via `window.__TEST__.seed(name)`. */
+export function makeTestHooks(
+  db: SqlDriver,
+  documents: InMemoryDocumentStorage,
+  fixtures: Record<string, Fixture>,
+): TestHooks {
   return {
     async reset() {
       await db.transaction(async (tx) => {

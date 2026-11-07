@@ -7,6 +7,24 @@
     "startupError": {
       "title": "The application could not start",
       "dbPath": "Database file"
+    },
+    "new": "New",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "archive": "Archive",
+    "restore": "Restore",
+    "open": "Open",
+    "actions": "Actions",
+    "archived": "Archived",
+    "showArchived": "Show archived",
+    "search": "Search",
+    "noRecords": "No records yet.",
+    "noMatches": "No records match your search.",
+    "allYears": "All years",
+    "datePlaceholder": "DD.MM.YYYY",
+    "confirmArchive": {
+      "title": "Archive record",
+      "message": "Archive “{{name}}”? It is hidden from lists but kept for history and can be restored."
     }
   },
   "nav": {
@@ -23,6 +41,57 @@
     "analyticsBudget": "Budget realisation",
     "settings": "Settings"
   },
+  "entity": {
+    "investor": {
+      "singular": "Investor",
+      "new": "New Investor",
+      "edit": "Edit Investor",
+      "name": "Name",
+      "vatNumber": "VAT number",
+      "contactPerson": "Contact person",
+      "email": "Email",
+      "phone": "Phone",
+      "projects": "Projects"
+    },
+    "subcontractor": {
+      "singular": "Subcontractor",
+      "new": "New Subcontractor",
+      "edit": "Edit Subcontractor",
+      "name": "Name",
+      "vatNumber": "VAT number",
+      "contactPerson": "Contact person",
+      "email": "Email",
+      "phone": "Phone",
+      "industry": "Industry"
+    },
+    "project": {
+      "singular": "Project",
+      "new": "New Project",
+      "edit": "Edit Project",
+      "name": "Name",
+      "investor": "Investor",
+      "status": "Status",
+      "deadline": "Deadline",
+      "budget": "Budget",
+      "year": "Year",
+      "summary": {
+        "contracted": "Contracted",
+        "collected": "Collected",
+        "contractedOut": "Contracted to subcontractors",
+        "paidOut": "Paid to subcontractors",
+        "net": "Net"
+      }
+    }
+  },
+  "enum": {
+    "projectStatus": {
+      "PLANNED": "Planned",
+      "ACTIVE": "Active",
+      "ON_HOLD": "On hold",
+      "DONE": "Done",
+      "CANCELLED": "Cancelled"
+    }
+  },
   "settings": {
     "currency": "Currency",
     "defaultVatRate": "Default VAT rate (%)",
@@ -37,6 +106,12 @@
     "money": {
       "invalid": "Invalid amount."
     },
-    "unexpected": "Unexpected error: {{message}}"
+    "unexpected": "Unexpected error: {{message}}",
+    "vat": {
+      "duplicate": "This VAT number is already in use."
+    },
+    "parentArchived": "The selected record is archived.",
+    "archivedReadOnly": "Archived records are read-only. Restore the record to edit it.",
+    "notFound": "Record not found."
   }
 }
