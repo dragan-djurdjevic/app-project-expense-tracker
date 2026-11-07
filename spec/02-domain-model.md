@@ -17,6 +17,9 @@ All entities share the common fields in DM-000. Field tables list: name (TS / DB
 - **VatNumber** — trimmed string, 3–20 chars, letters/digits/`-` only, stored upper-case.
 - **Email** — optional; when present must match a basic `x@y.z` pattern.
 - **Text fields** are trimmed; empty string after trim is treated as null for optional fields.
+- **Errors:** invalid Money → `BR-GEN-001` (`errors.money.invalid`); invalid VatRate, DateOnly, VatNumber or Email
+  format → `BR-GEN-003` (`errors.format`); empty required value (e.g. DateOnly `""`) → `BR-GEN-002`
+  (`errors.required`).
 
 ## DM-010 Investor
 | Field | Type | Req | Rules |
@@ -87,7 +90,7 @@ Direction of an invoice = type of its contract (INCOMING invoice → money in; O
 ## DM-060 Settings (single row)
 | Field | Type | Default |
 |---|---|---|
-| currency / currency | ISO 4217 code | `EUR` |
+| currency / currency | ISO 4217 code, one of `EUR`, `RSD`, `USD`, `CHF`, `GBP` (else `BR-GEN-003` `errors.format`) | `EUR` |
 | defaultVatRate / default_vat_rate | VatRate | `2000` |
 
 Settings are editable on the Settings screen (UI-080). Changing currency only changes display; amounts are not converted.
