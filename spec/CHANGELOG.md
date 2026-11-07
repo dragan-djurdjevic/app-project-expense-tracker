@@ -9,6 +9,10 @@ Every spec change gets an entry here **in the same commit** as the spec edit. Fo
 Bump rules: PATCH = wording/clarification with no behaviour change; MINOR = new or changed behaviour;
 MAJOR = reserved for post-POC breaking changes.
 
+## 0.3.3 — 2026-11-07
+- CHANGED M1 deliverable 11: CI triggers are `push` to `main`, `pull_request` and `workflow_dispatch`, so a PR branch
+  runs CI once per update instead of twice.
+
 ## 0.3.2 — 2026-11-07
 - CHANGED TC-M1-022: persistence checked via client-side navigation, not page reload (browser mode DB is in-memory, AR-009).
 - CHANGED AR-004: `DocumentStorage.save` takes `ownerId` so paths follow DS-004; ADDED `SettingsRepository` port.
