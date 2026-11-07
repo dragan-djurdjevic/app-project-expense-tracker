@@ -101,7 +101,7 @@ Settings are editable on the Settings screen (UI-080). Changing currency only ch
 | BR-GEN-001 | Money values must be integers 0…999 999 999 999 | `errors.money.invalid` |
 | BR-GEN-002 | Required fields must be present and non-empty after trim | `errors.required` |
 | BR-GEN-003 | String lengths and formats per field tables | `errors.format` |
-| BR-GEN-004 | Archive sets `archivedAt`; restore clears it. Archiving an already archived record is a no-op success. | — |
+| BR-GEN-004 | Archive sets `archivedAt`; restore clears it. Archiving an already archived record is a no-op success. Restoring an active record is a no-op success. | — |
 | BR-GEN-005 | Archiving a parent does **not** archive its children. | — |
 | BR-GEN-006 | A new or updated record may not reference an **archived** parent. Existing references to a parent archived later stay valid. | `errors.parentArchived` |
 | BR-GEN-007 | Archived records are read-only in the UI except for **Restore**. Use cases reject `update` on archived records. | `errors.archivedReadOnly` |

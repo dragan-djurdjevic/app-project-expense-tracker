@@ -40,7 +40,7 @@ No change in `src/core/**` or `src/ui/**` is allowed for such a switch. Therefor
 |---|---|
 | `InvestorRepository` | `list(filter)`, `get(id)`, `create(input)`, `update(id, input)`, `archive(id)`, `restore(id)`, `existsByVat(vat, excludeId?)` |
 | `SubcontractorRepository` | same shape as InvestorRepository |
-| `ProjectRepository` | same shape (without `existsByVat`); list filter supports `investorId`, `status`, `year` (AN-3 rule) |
+| `ProjectRepository` | same shape (without `existsByVat`) plus `availableYears()` (AN-000h, used by UI-030; `AnalyticsQuery` reuses it in M5); list filter supports `investorId`, `status`, `year` (AN-3 rule) |
 | `ContractRepository` | same shape; list filter supports `projectId`, `type`, `subcontractorId` |
 | `InvoiceRepository` | same shape; list filter supports `contractId`, `projectId`, `status` |
 | `AnalyticsQuery` | `contractedVsCollected(year, mode)`, `subcontractorPayments(year, mode)`, `projectsInYear(year)`, `netPerProject(year, mode)`, `budgetRealisation(statuses)`, `availableYears()` |
@@ -59,7 +59,9 @@ Both run the **same** repository code and migrations.
 One file per use case in `src/core/usecases/<entity>/`, e.g. `createProject.ts`. A use case:
 - receives ports via a factory: `makeCreateProject({ projectRepo, investorRepo, clock, ids })`;
 - validates input against business rules (`02-domain-model.md`), returns `Result<T, DomainError>`;
-- never throws for business errors (throws only for programming/infra errors).
+- never throws for business errors (throws only for programming/infra errors);
+- `get` returns `null` for an unknown id; `update`/`archive`/`restore` on an unknown id are programming errors (throw);
+- validation stops at the first failing rule (in form field order) and returns that single `DomainError`.
 
 `DomainError` = `{ code: string /* e.g. "BR-PRJ-003" */, field?: string, messageKey: string }`.
 The UI translates `messageKey` via i18n.
