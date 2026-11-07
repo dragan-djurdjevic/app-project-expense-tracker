@@ -14,5 +14,5 @@ Run milestone **$ARGUMENTS** following `CLAUDE.md` R7:
    show me the report.
 6. On PASS or PASS-WITH-PENDING: update `spec-lock.json` (`specCommit` = `git log -1 --format=%H -- spec/`,
    `specVersion` = `spec/VERSION`, `$ARGUMENTS` → `done`), then commit everything as
-   `$ARGUMENTS: <milestone title> (spec <version>)`. Do not push.
+   `feat($ARGUMENTS): <milestone title> (spec <version>)`. Do not push.
 7. Summarise: verdict, test counts, pending CI/manual items, report path.

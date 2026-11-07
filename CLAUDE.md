@@ -50,10 +50,16 @@ If the spec is ambiguous, contradictory or incomplete for the task, **stop** and
    `tests/`, and writes `validation/Mx-report.md`.
 3. Validator FAIL → the implementer fixes it (within scope) → validate again. Maximum 3 rounds, then escalate to the user.
 4. Validator PASS → update `spec-lock.json` (`specCommit` = current spec commit, `specVersion`, milestone
-   → `done`) and commit code + report + lock on the current branch as `Mx: <title> (spec <version>)`.
+   → `done`) and commit code + report + lock on the current branch as `feat(Mx): <title> (spec <version>)`.
 5. `/spec-sync` applies a committed spec change to milestones already `done` (same implementer → validator loop,
    validating **all** `done` milestones as a regression check).
 
 ## R8 — Git
 - Work on a feature branch (`mx/<short-name>` or `spec/<short-name>`), never directly on `main`.
 - Do not push, open PRs or trigger CI without the user's explicit permission.
+- Commit messages and PR titles follow [Conventional Commits](https://www.conventionalcommits.org/):
+  `<type>(<scope>): <summary>` in lowercase imperative, no trailing period.
+  - Spec change: `docs(spec): <summary> (v<version>)`
+  - Milestone: `feat(Mx): <milestone title> (spec <version>)`
+  - Spec sync: `chore(spec-sync): apply spec <version>`
+  - Other: `fix`, `test`, `build`, `ci`, `refactor`, `chore`, `docs` with a fitting scope.

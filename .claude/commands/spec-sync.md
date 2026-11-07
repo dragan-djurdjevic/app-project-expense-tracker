@@ -10,5 +10,5 @@ Follow `CLAUDE.md` R2 and R7.5:
    "Spec unchanged — nothing to do" and stop **without touching code**.
 3. Launch the `implementer` subagent with target `sync`.
 4. Launch the `validator` subagent with target `sync` (it validates all `done` milestones as regression).
-5. Same FAIL loop and PASS handling as `/milestone`; the commit message is `spec-sync: spec <version>`, with the
+5. Same FAIL loop and PASS handling as `/milestone`; the commit message is `chore(spec-sync): apply spec <version>`, with the
    `specCommit` updated in `spec-lock.json`. Do not push.
