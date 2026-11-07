@@ -1,8 +1,8 @@
 {
-  "specVersion": null,
-  "specCommit": null,
+  "specVersion": "0.3.3",
+  "specCommit": "d28ee4922796747df7be9e08b74e404be57597b6",
   "milestones": {
-    "M1": "pending",
+    "M1": "done",
     "M2": "pending",
     "M3": "pending",
     "M4": "pending",

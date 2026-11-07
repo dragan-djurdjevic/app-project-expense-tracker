@@ -1,0 +1,8 @@
+// Spec: AR-004
+import type { Clock } from "../../core/ports/Clock";
+
+export class SystemClock implements Clock {
+  now(): Date {
+    return new Date();
+  }
+}

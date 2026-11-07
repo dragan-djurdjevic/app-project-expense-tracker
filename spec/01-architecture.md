@@ -44,7 +44,8 @@ No change in `src/core/**` or `src/ui/**` is allowed for such a switch. Therefor
 | `ContractRepository` | same shape; list filter supports `projectId`, `type`, `subcontractorId` |
 | `InvoiceRepository` | same shape; list filter supports `contractId`, `projectId`, `status` |
 | `AnalyticsQuery` | `contractedVsCollected(year, mode)`, `subcontractorPayments(year, mode)`, `projectsInYear(year)`, `netPerProject(year, mode)`, `budgetRealisation(statuses)`, `availableYears()` |
-| `DocumentStorage` | `save(bytes, originalName): Promise<StoredDocumentRef>`, `open(ref)`, `remove(ref)`, `exists(ref)` |
+| `SettingsRepository` | `get(): Promise<Settings>`, `update(settings): Promise<void>` (DM-060) |
+| `DocumentStorage` | `save(bytes, originalName, ownerId): Promise<StoredDocumentRef>` (stores as `<ownerId>/<uuid>.pdf`, uuid from `IdGenerator`; `ownerId` = invoice id, DS-004), `open(ref)`, `remove(ref)`, `exists(ref)`. `InMemoryDocumentStorage.open` is a no-op in browser mode. |
 | `Clock` | `now(): Date` (for timestamps; makes tests deterministic) |
 | `IdGenerator` | `next(): string` (UUID v4; injectable for tests) |
 
@@ -81,6 +82,19 @@ The UI translates `messageKey` via i18n.
 | CI | GitHub Actions, `windows-latest` |
 
 No other runtime dependencies may be added unless the spec lists them.
+
+## AR-006a Allowed packages (all installed in M1)
+The **complete** list of direct dependencies; anything not listed here is forbidden (major versions given).
+- **dependencies:** `react`, `react-dom` 18; `react-router-dom` 6; `@mantine/core`, `@mantine/hooks`, `@mantine/form`,
+  `@mantine/dates`, `@mantine/modals`, `@mantine/notifications` 7; `dayjs` 1; `i18next`; `react-i18next`;
+  `@tauri-apps/api`, `@tauri-apps/plugin-sql`, `@tauri-apps/plugin-fs`, `@tauri-apps/plugin-dialog`,
+  `@tauri-apps/plugin-opener` 2; `sql.js` 1.
+- **devDependencies:** `typescript` 5; `vite` 5; `@vitejs/plugin-react` 4; `vitest` 2; `@playwright/test` 1;
+  `eslint` 9; `@eslint/js` 9; `typescript-eslint` 8; `eslint-plugin-boundaries`; `prettier` 3; `@tauri-apps/cli` 2;
+  `@types/react`, `@types/react-dom` 18; `@types/sql.js`; `@types/node` 22.
+- **Cargo (`src-tauri/Cargo.toml`):** `tauri` 2, `tauri-build` 2, `tauri-plugin-sql` 2 (feature `sqlite`),
+  `tauri-plugin-fs` 2, `tauri-plugin-dialog` 2, `tauri-plugin-opener` 2, `serde` 1, `serde_json` 1.
+- UUIDs use `crypto.randomUUID()` (no uuid package).
 
 ## AR-007 Folder structure
 ```

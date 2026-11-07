@@ -1,0 +1,9 @@
+node_modules
+dist
+dist-e2e
+src-tauri/target
+src-tauri/gen
+spec
+validation
+.yarn
+yarn.lock
