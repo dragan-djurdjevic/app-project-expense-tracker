@@ -173,6 +173,6 @@ Goal: confirm as much as possible locally; CI only adds what physically needs Wi
 - Rust via Homebrew `rustup` (`brew install rustup`, `rustup default stable`); `/opt/homebrew/opt/rustup/bin` and
   `~/.cargo/bin` on `PATH`.
 - Xcode Command Line Tools.
-- For `build:win-cross`: `brew install nsis llvm`, `cargo install --locked cargo-xwin`,
+- For `build:win-cross`: `brew install nsis llvm lld`, `cargo install --locked cargo-xwin`,
   `rustup target add x86_64-pc-windows-msvc`, and `$(brew --prefix llvm)/bin` on `PATH`.
 - `README.md` lists these; `scripts/check-env.mjs` (`yarn check:env`) verifies them and prints what's missing.

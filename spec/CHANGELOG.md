@@ -9,6 +9,9 @@ Every spec change gets an entry here **in the same commit** as the spec edit. Fo
 Bump rules: PATCH = wording/clarification with no behaviour change; MINOR = new or changed behaviour;
 MAJOR = reserved for post-POC breaking changes.
 
+## 0.3.1 — 2026-11-07
+- CHANGED AR-012, TC-M1-025: `lld` (provides `lld-link`) added to cross-build prerequisites; Homebrew ships it separately from `llvm`.
+
 ## 0.3.0 — 2026-11-07
 - CHANGED AR-006: package manager npm → Yarn 4 via Corepack (`packageManager` pin, `nodeLinker: node-modules`,
   `yarn install --immutable`); lockfile `yarn.lock`.
