@@ -1,4 +1,4 @@
-// Spec: UI-050, UI-002, UI-002a, UI-032, DM-050, BR-GEN-004, BR-GEN-007, UI-090
+// Spec: UI-050, UI-002, UI-002a, UI-032, DM-050, BR-GEN-004, BR-GEN-007, UI-090, DM-060
 import { ActionIcon, MultiSelect, Select, Text } from "@mantine/core";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -15,6 +15,7 @@ import { ContractTypeBadge, InvoiceStatusBadge } from "../../components/StatusBa
 import { useAsyncList } from "../../components/useAsyncList";
 import { formatDate } from "../../format/date";
 import { formatMoney } from "../../format/money";
+import { compareText } from "../../format/locale";
 import { formatVatRate } from "../../format/vatPercent";
 import { InvoiceForm } from "./InvoiceForm";
 
@@ -55,14 +56,14 @@ export function InvoiceList({ projectId, onChanged }: { projectId?: string; onCh
     if (!result.ok) return result;
     return {
       ok: true as const,
-      value: [...result.value].sort((a, b) => a.name.localeCompare(b.name, "en", { sensitivity: "base" })),
+      value: [...result.value].sort((a, b) => compareText(a.name, b.name, settings.language)),
     };
-  }, [useCases, fixedProject, refresh]);
+  }, [useCases, fixedProject, refresh, settings.language]);
   const reload = () => {
     setRefresh((n) => n + 1);
     onChanged?.();
   };
-  const money = (value: number) => formatMoney(value, settings.currency);
+  const money = (value: number) => formatMoney(value, settings.currency, settings.language);
 
   const columns: Column<InvoiceListRow>[] = [
     { key: "number", label: t("entity.invoice.number"), render: (r) => r.number, sortValue: (r) => r.number },
@@ -102,7 +103,7 @@ export function InvoiceList({ projectId, onChanged }: { projectId?: string; onCh
     {
       key: "vatRate",
       label: t("entity.invoice.vatPercent"),
-      render: (r) => formatVatRate(r.vatRate),
+      render: (r) => formatVatRate(r.vatRate, settings.language),
       sortValue: (r) => r.vatRate,
     },
     { key: "gross", label: t("entity.invoice.gross"), render: (r) => money(r.gross), sortValue: (r) => r.gross },

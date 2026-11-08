@@ -1,14 +1,16 @@
-// Spec: UI-041, UI-002, UI-002b, DM-040, BR-CON-002, BR-CON-003, BR-CON-005, BR-GEN-006, BR-GEN-007, UI-032, UI-090
+// Spec: UI-041, UI-002, UI-002b, DM-040, BR-CON-002, BR-CON-003, BR-CON-005, BR-GEN-006, BR-GEN-007, UI-032, UI-090, DM-060
 import { Input, SegmentedControl, Select, Text, TextInput, Textarea } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useApp } from "../../../app/AppProvider";
 import type { ContractListItem, ContractType } from "../../../core/domain/Contract";
+import type { Language } from "../../../core/domain/Settings";
 import { CONTRACT_TYPE_DEFAULT, CONTRACT_TYPE_OPTIONS } from "../../../core/usecases/contract/createContract";
 import { FormDrawer } from "../../components/FormDrawer";
 import { useEntityForm } from "../../components/useEntityForm";
 import { dateToIso, isoToDate, parseDisplayDate } from "../../format/date";
+import { compareText } from "../../format/locale";
 import { parseMoney } from "../../format/money";
 
 interface Values {
@@ -26,7 +28,7 @@ interface Option {
   label: string;
 }
 
-const byLabel = (a: Option, b: Option) => a.label.localeCompare(b.label, "en", { sensitivity: "base" });
+const byLabel = (language: Language) => (a: Option, b: Option) => compareText(a.label, b.label, language);
 
 /**
  * Create form (`contract` null; optional preset, locked project), edit form (active) or read-only view with Restore
@@ -46,7 +48,7 @@ export function ContractForm({
   onDone: () => void;
 }) {
   const { t } = useTranslation();
-  const { useCases } = useApp();
+  const { useCases, settings } = useApp();
   const form = useEntityForm();
   const [values, setValues] = useState<Values>({
     type: CONTRACT_TYPE_DEFAULT,
@@ -108,15 +110,15 @@ export function ContractForm({
             subcontractorOptions.push({ value: contract.subcontractorId, label: contract.counterpartyName });
           }
         }
-        setProjects(projectOptions.sort(byLabel));
+        setProjects(projectOptions.sort(byLabel(settings.language)));
         setInvestorNames(names);
-        setSubcontractors(subcontractorOptions.sort(byLabel));
+        setSubcontractors(subcontractorOptions.sort(byLabel(settings.language)));
       },
     );
     return () => {
       active = false;
     };
-  }, [opened, contract, presetProjectId, useCases]);
+  }, [opened, contract, presetProjectId, useCases, settings.language]);
 
   const set = <K extends keyof Values>(key: K, value: Values[K]) =>
     setValues((current) => ({ ...current, [key]: value }));

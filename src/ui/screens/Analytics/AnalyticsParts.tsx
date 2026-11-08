@@ -1,4 +1,4 @@
-// Spec: UI-060, UI-002, AN-000
+// Spec: UI-060, UI-002, AN-000, DM-060
 import { Anchor, Badge, Group, Switch, Table, Text } from "@mantine/core";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -42,7 +42,7 @@ export function ProjectCell({ id, name, archived }: { id: string; name: string; 
 export function MoneyText({ value }: { value: number | null }) {
   const { settings } = useApp();
   if (value === null) return <>—</>;
-  const text = formatMoney(value, settings.currency);
+  const text = formatMoney(value, settings.currency, settings.language);
   return value < 0 ? (
     <Text c="red" span inherit>
       {text}
@@ -53,7 +53,8 @@ export function MoneyText({ value }: { value: number | null }) {
 }
 
 export function PercentText({ value }: { value: number | null }) {
-  return <>{formatPercentValue(value)}</>;
+  const { settings } = useApp();
+  return <>{formatPercentValue(value, settings.language)}</>;
 }
 
 /** Analytics table with header labels, body rows and a footer row (`table-footer`, UI-060). */

@@ -1,4 +1,4 @@
-// Spec: AR-009, AR-010, UI-001
+// Spec: AR-009, AR-010, UI-001, UI-090
 import "@mantine/core/styles.css";
 import "@mantine/dates/styles.css";
 import "@mantine/notifications/styles.css";
@@ -8,6 +8,7 @@ import { AppProvider } from "./app/AppProvider";
 import { createContainer } from "./app/composition";
 import { StartupError } from "./app/Container";
 import { AppRoutes } from "./ui/App";
+import { applyLanguage } from "./ui/i18n";
 import { UiRoot } from "./ui/Root";
 import StartupErrorScreen from "./ui/screens/StartupError/StartupErrorScreen";
 
@@ -20,6 +21,7 @@ async function start() {
     if (!settings.ok) {
       throw new StartupError(settings.error.messageKey, container.runtime.dbPath);
     }
+    await applyLanguage(settings.value.language);
     root.render(
       <StrictMode>
         <UiRoot>

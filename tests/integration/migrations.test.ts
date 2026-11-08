@@ -1,4 +1,4 @@
-// Spec: DS-001, DS-002, DS-003, AR-004, AR-010
+// Spec: DS-001, DS-002, DS-003, DS-006, AR-004, AR-010
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { bundledMigrations } from "../../src/adapters/sqlite/bundledMigrations";
@@ -28,15 +28,16 @@ async function names(db: SqlJsDriver, type: "table" | "index"): Promise<string[]
 }
 
 describe("migrations (DS-002, DS-003)", () => {
-  it("TC-M1-010 migration runner on an empty SqlJs DB creates all DS-003 tables and records version 1", async () => {
+  it("TC-M1-010 migration runner on an empty SqlJs DB creates all DS-003 tables and records every migration version (1, 2)", async () => {
     const db = await SqlJsDriver.create();
     const applied = await runMigrations(db, bundledMigrations(), fixedClock("2026-11-07T10:00:00.000Z"));
 
-    expect(applied).toEqual([1]);
+    expect(applied).toEqual([1, 2]);
     expect(await names(db, "table")).toEqual(DS003_TABLES);
     expect(await names(db, "index")).toEqual(DS003_INDEXES);
-    expect(await db.select("SELECT version, applied_at FROM schema_migrations")).toEqual([
+    expect(await db.select("SELECT version, applied_at FROM schema_migrations ORDER BY version")).toEqual([
       { version: 1, applied_at: "2026-11-07T10:00:00.000Z" },
+      { version: 2, applied_at: "2026-11-07T10:00:00.000Z" },
     ]);
   });
 
@@ -57,7 +58,10 @@ describe("migrations (DS-002, DS-003)", () => {
 
     await expect(runMigrations(db, bundledMigrations(), fixedClock())).resolves.toEqual([]);
     await expect(ensureSettingsRow(db)).resolves.toBeUndefined();
-    expect(await db.select("SELECT COUNT(*) AS n FROM schema_migrations")).toEqual([{ n: 1 }]);
+    expect(await db.select("SELECT version FROM schema_migrations ORDER BY version")).toEqual([
+      { version: 1 },
+      { version: 2 },
+    ]);
     expect(await db.select("SELECT COUNT(*) AS n FROM settings")).toEqual([{ n: 1 }]);
   });
 
@@ -94,5 +98,52 @@ describe("migrations (DS-002, DS-003)", () => {
     await expect(insertContract("c3", "INCOMING", null)).resolves.toEqual({ rowsAffected: 1 });
     await expect(insertContract("c4", "OUTGOING", "s1")).resolves.toEqual({ rowsAffected: 1 });
     expect(await db.select("SELECT id FROM contract ORDER BY id")).toEqual([{ id: "c3" }, { id: "c4" }]);
+  });
+
+  it("TC-M6-006 0002_settings_language.sql is exactly the normative DS-006 SQL", () => {
+    const spec = readFileSync(new URL("../../spec/03-data-schema.md", import.meta.url), "utf8");
+    const section = spec.slice(spec.indexOf("## DS-006"));
+    const normative = /```sql\n([\s\S]*?)```/.exec(section)?.[1];
+    const migration = bundledMigrations().find((m) => m.version === 2);
+
+    expect(normative).toBeDefined();
+    expect(migration?.name).toBe("settings_language");
+    expect(migration?.sql.replace(/^-- Spec:.*\n/, "")).toBe(normative);
+  });
+
+  it("TC-M6-006 migrations on a DB with only 0001 applied add settings.language = en; second run is a no-op; CHECK rejects de", async () => {
+    const db = await SqlJsDriver.create();
+    const all = bundledMigrations();
+    expect(
+      await runMigrations(
+        db,
+        all.filter((m) => m.version === 1),
+        fixedClock(),
+      ),
+    ).toEqual([1]);
+    await ensureSettingsRow(db);
+    await db.execute("UPDATE settings SET currency = 'RSD', default_vat_rate = 1000 WHERE id = 1");
+
+    expect(await runMigrations(db, all, fixedClock())).toEqual([2]);
+    expect(await db.select("SELECT currency, default_vat_rate, language FROM settings")).toEqual([
+      { currency: "RSD", default_vat_rate: 1000, language: "en" },
+    ]);
+    expect(await db.select("SELECT version FROM schema_migrations ORDER BY version")).toEqual([
+      { version: 1 },
+      { version: 2 },
+    ]);
+
+    expect(await runMigrations(db, all, fixedClock())).toEqual([]);
+    expect(await db.select("SELECT version FROM schema_migrations ORDER BY version")).toEqual([
+      { version: 1 },
+      { version: 2 },
+    ]);
+
+    await expect(db.execute("UPDATE settings SET language = 'de' WHERE id = 1")).rejects.toThrow(
+      /CHECK constraint failed/,
+    );
+    await expect(db.execute("UPDATE settings SET language = 'sr-Latn' WHERE id = 1")).resolves.toEqual({
+      rowsAffected: 1,
+    });
   });
 });

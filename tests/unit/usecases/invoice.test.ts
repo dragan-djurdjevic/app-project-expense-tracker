@@ -26,7 +26,7 @@ async function setup(defaultVatRate = 2000) {
   const ids = sequentialIds();
   const contractRepo = new InMemoryContractRepository(clock);
   const invoiceRepo = new InMemoryInvoiceRepository(clock);
-  const settingsRepo = new InMemorySettingsRepository({ currency: "EUR", defaultVatRate });
+  const settingsRepo = new InMemorySettingsRepository({ currency: "EUR", defaultVatRate, language: "en" });
   const documents = new FakeDocumentStorage();
   for (const id of [CONTRACT_ID, OTHER_CONTRACT_ID]) {
     await contractRepo.create({

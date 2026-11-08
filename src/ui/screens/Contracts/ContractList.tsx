@@ -1,4 +1,4 @@
-// Spec: UI-040, UI-002, UI-002a, UI-032, DM-040, BR-GEN-004, BR-GEN-006, BR-GEN-007, UI-090
+// Spec: UI-040, UI-002, UI-002a, UI-032, DM-040, BR-GEN-004, BR-GEN-006, BR-GEN-007, UI-090, DM-060
 import { Select } from "@mantine/core";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -12,6 +12,7 @@ import { RowActions } from "../../components/RowActions";
 import { ContractTypeBadge } from "../../components/StatusBadge";
 import { useAsyncList } from "../../components/useAsyncList";
 import { formatDate } from "../../format/date";
+import { compareText } from "../../format/locale";
 import { formatMoney } from "../../format/money";
 import { ContractForm } from "./ContractForm";
 
@@ -58,14 +59,14 @@ export function ContractList({
     if (!result.ok) return result;
     return {
       ok: true as const,
-      value: [...result.value].sort((a, b) => a.name.localeCompare(b.name, "en", { sensitivity: "base" })),
+      value: [...result.value].sort((a, b) => compareText(a.name, b.name, settings.language)),
     };
-  }, [useCases, fixedProject, refresh]);
+  }, [useCases, fixedProject, refresh, settings.language]);
   const reload = () => {
     setRefresh((n) => n + 1);
     onChanged?.();
   };
-  const money = (value: number) => formatMoney(value, settings.currency);
+  const money = (value: number) => formatMoney(value, settings.currency, settings.language);
 
   const columns: Column<ContractListItem>[] = [
     { key: "number", label: t("entity.contract.number"), render: (r) => r.number, sortValue: (r) => r.number },

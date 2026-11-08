@@ -1,4 +1,4 @@
-// Spec: DS-002, AR-010
+// Spec: DS-002, DS-006, AR-010
 import type { Clock } from "../../core/ports/Clock";
 import type { SqlDriver } from "./SqlDriver";
 
@@ -35,7 +35,7 @@ export async function runMigrations(driver: SqlDriver, migrations: Migration[], 
   return applied;
 }
 
-/** AR-010 step 3: make sure the single settings row exists (defaults EUR / 2000 come from the schema). */
+/** AR-010 step 3: make sure the single settings row exists (defaults EUR / 2000 / en come from the schema). */
 export async function ensureSettingsRow(driver: SqlDriver): Promise<void> {
   await driver.execute("INSERT OR IGNORE INTO settings (id) VALUES (1)");
 }

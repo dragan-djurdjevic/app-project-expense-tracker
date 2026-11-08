@@ -5,11 +5,12 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useApp } from "../../../app/AppProvider";
 import type { DomainError } from "../../../core/domain/DomainError";
-import { SUPPORTED_CURRENCIES } from "../../../core/usecases/settings/updateSettings";
+import { SUPPORTED_CURRENCIES, SUPPORTED_LANGUAGES } from "../../../core/usecases/settings/updateSettings";
 import { ScreenTitle } from "../../components/ScreenTitle";
 import { formatVatPercent, parseVatPercent } from "../../format/vatPercent";
+import { applyLanguage } from "../../i18n";
 
-type FieldErrors = Partial<Record<"currency" | "defaultVatRate", string>>;
+type FieldErrors = Partial<Record<"currency" | "defaultVatRate" | "language", string>>;
 
 function PathRow({ label, path, onOpen }: { label: string; path: string; onOpen: (() => void) | null }) {
   const { t } = useTranslation();
@@ -33,9 +34,10 @@ function PathRow({ label, path, onOpen }: { label: string; path: string; onOpen:
 }
 
 export default function SettingsScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { useCases, runtime, setSettings } = useApp();
   const [currency, setCurrency] = useState<string | null>(null);
+  const [language, setLanguage] = useState<string | null>(null);
   const [vatPercent, setVatPercent] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
@@ -46,7 +48,8 @@ export default function SettingsScreen() {
     void useCases.getSettings().then((result) => {
       if (active && result.ok) {
         setCurrency(result.value.currency);
-        setVatPercent(formatVatPercent(result.value.defaultVatRate));
+        setVatPercent(formatVatPercent(result.value.defaultVatRate, result.value.language));
+        setLanguage(result.value.language);
       }
     });
     return () => {
@@ -55,7 +58,7 @@ export default function SettingsScreen() {
   }, [useCases]);
 
   const showError = (error: DomainError) => {
-    if (error.field === "currency" || error.field === "defaultVatRate") {
+    if (error.field === "currency" || error.field === "defaultVatRate" || error.field === "language") {
       setFieldErrors({ [error.field]: t(error.messageKey) });
     } else {
       setFormError(t(error.messageKey));
@@ -73,10 +76,16 @@ export default function SettingsScreen() {
     }
     setSubmitting(true);
     try {
-      const result = await useCases.updateSettings({ currency: currency ?? "", defaultVatRate: vat.value });
+      const result = await useCases.updateSettings({
+        currency: currency ?? "",
+        defaultVatRate: vat.value,
+        language: language ?? "",
+      });
       if (result.ok) {
+        await applyLanguage(result.value.language);
         setSettings(result.value);
-        notifications.show({ message: t("common.saved"), color: "green" });
+        setVatPercent(formatVatPercent(result.value.defaultVatRate, result.value.language));
+        notifications.show({ message: i18n.t("common.saved"), color: "green" });
       } else {
         showError(result.error);
       }
@@ -117,6 +126,15 @@ export default function SettingsScreen() {
             error={
               fieldErrors.defaultVatRate && <span data-testid="error-defaultVatRate">{fieldErrors.defaultVatRate}</span>
             }
+          />
+          <Select
+            label={t("settings.language")}
+            data={SUPPORTED_LANGUAGES.map((value) => ({ value, label: t(`settings.languageOption.${value}`) }))}
+            value={language}
+            onChange={setLanguage}
+            allowDeselect={false}
+            data-testid="field-language"
+            error={fieldErrors.language && <span data-testid="error-language">{fieldErrors.language}</span>}
           />
           <Group>
             <Button type="submit" loading={submitting} disabled={submitting} data-testid="btn-save">

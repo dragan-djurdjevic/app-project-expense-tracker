@@ -1,4 +1,4 @@
-// Spec: UI-030, UI-002, UI-002a, UI-032, AN-3, BR-GEN-004, BR-GEN-007, UI-090
+// Spec: UI-030, UI-002, UI-002a, UI-032, AN-3, BR-GEN-004, BR-GEN-007, UI-090, DM-060
 import { MultiSelect, Select } from "@mantine/core";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -67,7 +67,7 @@ export default function ProjectsScreen() {
     {
       key: "budget",
       label: t("entity.project.budget"),
-      render: (r) => (r.budget === null ? null : formatMoney(r.budget, settings.currency)),
+      render: (r) => (r.budget === null ? null : formatMoney(r.budget, settings.currency, settings.language)),
       sortValue: (r) => r.budget,
     },
   ];

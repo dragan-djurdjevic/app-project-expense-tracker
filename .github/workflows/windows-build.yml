@@ -1,4 +1,4 @@
-# Spec: AR-006, AR-011, AR-012, OV-003
+# Spec: AR-006, AR-011, AR-012, OV-003, DS-006
 name: windows-build
 
 on:
@@ -68,8 +68,8 @@ jobs:
           while ((Get-Date) -lt $deadline) {
             if ($proc.HasExited) { break }
             if (Test-Path $db) {
-              $version = python -c "import sqlite3,sys; c=sqlite3.connect(sys.argv[1]); print(','.join(str(r[0]) for r in c.execute('SELECT version FROM schema_migrations')))" $db 2>$null
-              if ($version -eq "1") { break }
+              $version = python -c "import sqlite3,sys; c=sqlite3.connect(sys.argv[1]); print(','.join(str(r[0]) for r in c.execute('SELECT version FROM schema_migrations ORDER BY version')))" $db 2>$null
+              if ($version -eq "1,2") { break }
             }
             Start-Sleep -Milliseconds 500
           }
@@ -77,8 +77,8 @@ jobs:
           try {
             if ($proc.HasExited) { throw "App exited early with code $($proc.ExitCode)" }
             if (-not (Test-Path $db)) { throw "tracker.db not created within 20 s" }
-            if ($version -ne "1") { throw "schema_migrations versions = '$version', expected '1'" }
-            Write-Host "App alive, tracker.db created, migration version 1 recorded"
+            if ($version -ne "1,2") { throw "schema_migrations versions = '$version', expected '1,2'" }
+            Write-Host "App alive, tracker.db created, migration versions 1, 2 recorded"
           } finally {
             if (-not $proc.HasExited) { Stop-Process -Id $proc.Id -Force }
             Start-Sleep -Seconds 1

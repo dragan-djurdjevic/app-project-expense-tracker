@@ -103,8 +103,10 @@ invoice without an attachment is a programming error (throws, AR-005).
 |---|---|---|
 | currency / currency | ISO 4217 code, one of `EUR`, `RSD`, `USD`, `CHF`, `GBP` (else `BR-GEN-003` `errors.format`) | `EUR` |
 | defaultVatRate / default_vat_rate | VatRate | `2000` |
+| language / language | one of `en`, `sr-Latn` (else `BR-GEN-003` `errors.format`, field `language`) | `en` |
 
 Settings are editable on the Settings screen (UI-080). Changing currency only changes display; amounts are not converted.
+Changing language only changes the UI language and formatting (UI-002, UI-090); stored data is not changed.
 
 ## Business rules
 | ID | Rule | Error messageKey |
