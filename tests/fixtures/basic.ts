@@ -1,4 +1,4 @@
-// Spec: AR-009, DM-010, DM-020, DM-030
+// Spec: AR-009, DM-010, DM-020, DM-030, DM-040
 import type { SqlDriver } from "../../src/adapters/sqlite/SqlDriver";
 
 const TS = "2026-01-01T00:00:00.000Z";
@@ -19,9 +19,19 @@ export const BASIC = {
     /** Archived. */
     school: "30000000-0000-4000-8000-000000000003",
   },
+  /** Office Tower has no contracts (keeps TC-M2-036 valid). */
+  contracts: {
+    villaIn: "40000000-0000-4000-8000-000000000001",
+    villaOut: "40000000-0000-4000-8000-000000000002",
+    schoolIn: "40000000-0000-4000-8000-000000000003",
+    schoolOut: "40000000-0000-4000-8000-000000000004",
+  },
 } as const;
 
-/** Fixture "basic" (M2): 2 investors, 2 subcontractors, 3 projects (1 archived). */
+/**
+ * Fixture "basic": 2 investors, 2 subcontractors, 3 projects (1 archived) (M2) and 4 active contracts on Villa Lake
+ * and the archived School Annex (M3).
+ */
 export async function basicFixture(db: SqlDriver): Promise<void> {
   await db.transaction(async (tx) => {
     const investor = (id: string, name: string, vat: string, contact: string | null, email: string | null) =>
@@ -59,5 +69,38 @@ export async function basicFixture(db: SqlDriver): Promise<void> {
     await project(BASIC.projects.villa, "Villa Lake", BASIC.investors.alpha, "2025-06-30", "DONE", 12_000_000, null);
     await project(BASIC.projects.tower, "Office Tower", BASIC.investors.beta, "2026-12-31", "ACTIVE", 60_000_000, null);
     await project(BASIC.projects.school, "School Annex", BASIC.investors.alpha, "2026-03-31", "ACTIVE", 3_500_000, TS);
+
+    const contract = (
+      id: string,
+      number: string,
+      projectId: string,
+      subcontractorId: string | null,
+      date: string,
+      value: number,
+    ) =>
+      tx.execute(
+        `INSERT INTO contract (id, number, type, project_id, subcontractor_id, value, date, description,
+                               created_at, updated_at, archived_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, NULL)`,
+        [id, number, subcontractorId ? "OUTGOING" : "INCOMING", projectId, subcontractorId, value, date, TS, TS],
+      );
+    await contract(BASIC.contracts.villaIn, "V-001", BASIC.projects.villa, null, "2025-02-10", 10_000_000);
+    await contract(
+      BASIC.contracts.villaOut,
+      "V-OUT-1",
+      BASIC.projects.villa,
+      BASIC.subcontractors.struct,
+      "2025-03-15",
+      3_000_000,
+    );
+    await contract(BASIC.contracts.schoolIn, "S-001", BASIC.projects.school, null, "2026-01-20", 3_000_000);
+    await contract(
+      BASIC.contracts.schoolOut,
+      "S-OUT-1",
+      BASIC.projects.school,
+      BASIC.subcontractors.hvac,
+      "2026-02-05",
+      800_000,
+    );
   });
 }

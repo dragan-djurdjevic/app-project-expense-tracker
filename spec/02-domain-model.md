@@ -109,11 +109,11 @@ Settings are editable on the Settings screen (UI-080). Changing currency only ch
 | BR-INV-001 | Investor VAT number unique among investors | `errors.vat.duplicate` |
 | BR-SUB-001 | Subcontractor VAT number unique among subcontractors | `errors.vat.duplicate` |
 | BR-PRJ-001 | `investorId` must reference an existing investor (active, per BR-GEN-006) | `errors.parentArchived` / `errors.notFound` |
-| BR-CON-001 | `projectId` must reference an existing project (active, per BR-GEN-006) | `errors.parentArchived` / `errors.notFound` |
-| BR-CON-002 | `OUTGOING` ⇒ `subcontractorId` required and must reference an existing subcontractor (active, per BR-GEN-006) | `errors.contract.subcontractorRequired` |
-| BR-CON-003 | `INCOMING` ⇒ `subcontractorId` must be null | `errors.contract.subcontractorForbidden` |
-| BR-CON-004 | `number` unique within the same project (incl. archived contracts), case-insensitive | `errors.contract.numberDuplicate` |
-| BR-CON-005 | `type` and `projectId` cannot change after create | `errors.immutable` |
+| BR-CON-001 | `projectId` must reference an existing project (active, per BR-GEN-006). Unknown → `{code:"BR-CON-001", field:"projectId", messageKey:"errors.notFound"}`; archived → `{code:"BR-GEN-006", field:"projectId", messageKey:"errors.parentArchived"}` | `errors.parentArchived` / `errors.notFound` |
+| BR-CON-002 | `OUTGOING` ⇒ `subcontractorId` required and must reference an existing subcontractor (active, per BR-GEN-006). Field `subcontractorId`. Missing → code `BR-CON-002`, `errors.contract.subcontractorRequired`; unknown → code `BR-CON-002`, `errors.notFound`; archived → code `BR-GEN-006`, `errors.parentArchived`. On update the reference is re-checked only when `subcontractorId` changes. | `errors.contract.subcontractorRequired` / `errors.notFound` / `errors.parentArchived` |
+| BR-CON-003 | `INCOMING` ⇒ `subcontractorId` must be null. Field `subcontractorId`. | `errors.contract.subcontractorForbidden` |
+| BR-CON-004 | `number` unique within the same project (incl. archived contracts), case-insensitive (ASCII, as `COLLATE NOCASE`, AR-004). Field `number`. | `errors.contract.numberDuplicate` |
+| BR-CON-005 | `type` and `projectId` cannot change after create. Update input has the same shape as create; field = the first changed one in order `type`, `projectId`. | `errors.immutable` |
 | BR-IVC-001 | `contractId` must reference an existing contract (active, per BR-GEN-006) | `errors.parentArchived` / `errors.notFound` |
 | BR-IVC-002 | `contractId` cannot change after create | `errors.immutable` |
 | BR-IVC-003 | `number` unique within the same contract (incl. archived), case-insensitive | `errors.invoice.numberDuplicate` |
@@ -121,4 +121,4 @@ Settings are editable on the Settings screen (UI-080). Changing currency only ch
 | BR-IVC-005 | Status transitions allowed: DRAFT→ISSUED, DRAFT→CANCELLED, ISSUED→PAID, ISSUED→CANCELLED, ISSUED→DRAFT, PAID→ISSUED (undo). CANCELLED is final. Same-status "transition" is a no-op. | `errors.invoice.statusTransition` |
 | BR-IVC-006 | Attachment must be a PDF (file starts with `%PDF-` bytes **and** extension `.pdf`, case-insensitive) and ≤ 20 MB | `errors.attachment.notPdf` / `errors.attachment.tooLarge` |
 | BR-IVC-007 | Replacing an attachment removes the previous stored file; removing an attachment deletes the stored file and clears the fields. Archiving an invoice keeps its file. | — |
-| BR-IVC-008 | Sum of non-cancelled invoice values on a contract **may** exceed the contract value; the UI shows a warning (UI-052), not an error. | — |
+| BR-IVC-008 | Sum of non-cancelled invoice values (archived invoices included) on a contract **may** exceed the contract value; the UI shows a warning (UI-052), not an error. | — |

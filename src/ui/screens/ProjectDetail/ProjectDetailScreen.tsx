@@ -1,4 +1,4 @@
-// Spec: UI-032, UI-002, UI-090, DM-030
+// Spec: UI-032, UI-040, UI-002, UI-090, DM-030
 import { Badge, Group, Paper, SimpleGrid, Stack, Tabs, Text } from "@mantine/core";
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -9,6 +9,7 @@ import { ScreenTitle } from "../../components/ScreenTitle";
 import { ProjectStatusBadge } from "../../components/StatusBadge";
 import { formatDate } from "../../format/date";
 import { formatMoney } from "../../format/money";
+import { ContractList } from "../Contracts/ContractList";
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -40,6 +41,7 @@ export default function ProjectDetailScreen() {
   const { id = "" } = useParams();
   const { useCases, settings } = useApp();
   const [project, setProject] = useState<ProjectDetails | null | undefined>(undefined);
+  const [refresh, setRefresh] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -49,7 +51,7 @@ export default function ProjectDetailScreen() {
     return () => {
       active = false;
     };
-  }, [useCases, id]);
+  }, [useCases, id, refresh]);
 
   if (project === undefined) return null;
   if (project === null) return <Text c="dimmed">{t("errors.notFound")}</Text>;
@@ -88,7 +90,11 @@ export default function ProjectDetailScreen() {
           <Tabs.Tab value="invoices">{t("nav.invoices")}</Tabs.Tab>
         </Tabs.List>
         <Tabs.Panel value="contracts" pt="md">
-          <Text c="dimmed">{t("common.comingIn", { milestone: "M3" })}</Text>
+          <ContractList
+            projectId={project.id}
+            projectArchived={project.archivedAt !== null}
+            onChanged={() => setRefresh((n) => n + 1)}
+          />
         </Tabs.Panel>
         <Tabs.Panel value="invoices" pt="md">
           <Text c="dimmed">{t("common.comingIn", { milestone: "M4" })}</Text>

@@ -41,7 +41,7 @@ No change in `src/core/**` or `src/ui/**` is allowed for such a switch. Therefor
 | `InvestorRepository` | `list(filter)`, `get(id)`, `create(input)`, `update(id, input)`, `archive(id)`, `restore(id)`, `existsByVat(vat, excludeId?)` |
 | `SubcontractorRepository` | same shape as InvestorRepository |
 | `ProjectRepository` | same shape (without `existsByVat`) plus `availableYears()` (AN-000h, used by UI-030; `AnalyticsQuery` reuses it in M5); list filter supports `investorId`, `status`, `year` (AN-3 rule) |
-| `ContractRepository` | same shape; list filter supports `projectId`, `type`, `subcontractorId` |
+| `ContractRepository` | same shape plus `existsByNumber(projectId, number, excludeId?)` (case-insensitive as SQLite `COLLATE NOCASE`, i.e. ASCII letters only, matching `ux_contract_project_number`; includes archived contracts). `list(filter)` returns `ContractListItem` = Contract + `projectName`, `counterpartyName`, `invoiced`, `paid`. List filter supports `projectId`, `type`, `subcontractorId` |
 | `InvoiceRepository` | same shape; list filter supports `contractId`, `projectId`, `status` |
 | `AnalyticsQuery` | `contractedVsCollected(year, mode)`, `subcontractorPayments(year, mode)`, `projectsInYear(year)`, `netPerProject(year, mode)`, `budgetRealisation(statuses)`, `availableYears()` |
 | `SettingsRepository` | `get(): Promise<Settings>`, `update(settings): Promise<void>` (DM-060) |
@@ -61,7 +61,11 @@ One file per use case in `src/core/usecases/<entity>/`, e.g. `createProject.ts`.
 - validates input against business rules (`02-domain-model.md`), returns `Result<T, DomainError>`;
 - never throws for business errors (throws only for programming/infra errors);
 - `get` returns `null` for an unknown id; `update`/`archive`/`restore` on an unknown id are programming errors (throw);
-- validation stops at the first failing rule (in form field order) and returns that single `DomainError`.
+- validation stops at the first failing rule and returns that single `DomainError`, checked in this order:
+  (1) required/format/value-object rules and conditional presence rules (e.g. BR-CON-002 "required", BR-CON-003)
+  in form field order; (2) reference rules (parent exists, parent active per BR-GEN-006) in form field order;
+  (3) uniqueness rules (BR-INV-001, BR-SUB-001, BR-CON-004, BR-IVC-003). On `update`, BR-GEN-007 is checked first,
+  then immutability rules (BR-CON-005, BR-IVC-002), then (1)–(3).
 
 `DomainError` = `{ code: string /* e.g. "BR-PRJ-003" */, field?: string, messageKey: string }`.
 The UI translates `messageKey` via i18n.

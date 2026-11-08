@@ -4,7 +4,7 @@ import { expect, test, type Page } from "@playwright/test";
 /** UI-001 sidebar items in order: label, route, data-testid, placeholder (null once the screen is implemented). */
 const NAV = [
   { label: "Projects", route: "/projects", testId: "nav-projects", placeholder: null },
-  { label: "Contracts", route: "/contracts", testId: "nav-contracts", placeholder: "Coming in M3" },
+  { label: "Contracts", route: "/contracts", testId: "nav-contracts", placeholder: null },
   { label: "Invoices", route: "/invoices", testId: "nav-invoices", placeholder: "Coming in M4" },
   { label: "Investors", route: "/investors", testId: "nav-investors", placeholder: null },
   { label: "Subcontractors", route: "/subcontractors", testId: "nav-subcontractors", placeholder: null },

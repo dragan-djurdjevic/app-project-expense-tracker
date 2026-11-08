@@ -108,8 +108,9 @@ test("TC-M2-036 project detail page shows header data and summary cards with zer
   for (const card of ["Contracted", "Collected", "Contracted to subcontractors", "Paid to subcontractors", "Net"]) {
     await expect(main.getByText(card, { exact: true }).locator("..")).toContainText("€0.00");
   }
-  await expect(main.getByRole("tab", { name: "Contracts" })).toBeVisible();
-  await expect(main).toContainText("Coming in M3");
+  // Contracts tab (default, M3): Office Tower has no contracts.
+  await expect(main.getByRole("tab", { name: "Contracts" })).toHaveAttribute("aria-selected", "true");
+  await expect(main).toContainText("No records yet.");
   await main.getByRole("tab", { name: "Invoices" }).click();
   await expect(main).toContainText("Coming in M4");
 });
