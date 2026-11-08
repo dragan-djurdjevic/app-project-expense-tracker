@@ -9,6 +9,10 @@ Every spec change gets an entry here **in the same commit** as the spec edit. Fo
 Bump rules: PATCH = wording/clarification with no behaviour change; MINOR = new or changed behaviour;
 MAJOR = reserved for post-POC breaking changes.
 
+## 0.5.1 — 2026-11-08
+- CHANGED DEMO-904: gross-mode 2026 footer margin corrected from 81.1 % to 80.8 %; percentages are always computed
+  from net values (AN-000c). No behaviour change.
+
 ## 0.5.0 — 2026-11-08
 - ADDED AR-013: profiles `live` / `demo` with fully separate DB file and documents folder (`<root>/demo/`), active
   profile in `<root>/profile.json`, Rust commands `get_profile`, `switch_profile`, `reset_demo`, fs scope limited to the

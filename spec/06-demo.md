@@ -217,7 +217,7 @@ Retained 540,000.00 (80.6 %). In 2025, Harbor Library Renovation has Paid 80,000
 | **2026 footer** | | **600,000.00** | **115,000.00** | **485,000.00** | **80.8 %** |
 | **All footer** | | **1,560,000.00** | **312,000.00** | **1,248,000.00** | **80.0 %** |
 
-Gross mode 2026 footer: Collected 720,000.00, Paid 136,000.00, Net 584,000.00, Margin 81.1 % (V30 at 10 % VAT).
+Gross mode 2026 footer: Collected 720,000.00, Paid 136,000.00, Net 584,000.00, Margin 80.8 % (percentages from net values, AN-000c).
 
 ### DEMO-905 Expected AN-5 (all statuses)
 | Project | Budget | Contracted | Contr. % budget | Invoiced | Collected | Real. % budget | Real. % contracted | Remaining |
