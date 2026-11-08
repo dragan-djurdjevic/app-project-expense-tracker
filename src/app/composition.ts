@@ -1,8 +1,9 @@
-// Spec: AR-001, AR-002, AR-003, AR-005, AR-009, AR-010, DS-001, DS-004, UI-010, UI-020, UI-030, UI-032, UI-040, UI-041, UI-050, UI-051, UI-052, UI-053, DM-050
+// Spec: AR-001, AR-002, AR-003, AR-005, AR-009, AR-010, DS-001, DS-004, UI-010, UI-020, UI-030, UI-032, UI-040, UI-041, UI-050, UI-051, UI-052, UI-053, DM-050, AN-000, UI-060, UI-061, UI-062, UI-063, UI-064, UI-065, UI-033
 import wasmUrl from "sql.js/dist/sql-wasm.wasm?url";
 import { bundledMigrations } from "../adapters/sqlite/bundledMigrations";
 import { ensureSettingsRow, runMigrations } from "../adapters/sqlite/runMigrations";
 import type { SqlDriver } from "../adapters/sqlite/SqlDriver";
+import { SqliteAnalyticsQuery } from "../adapters/sqlite/SqliteAnalyticsQuery";
 import { SqliteContractRepository } from "../adapters/sqlite/SqliteContractRepository";
 import { SqliteInvestorRepository } from "../adapters/sqlite/SqliteInvestorRepository";
 import { SqliteInvoiceRepository } from "../adapters/sqlite/SqliteInvoiceRepository";
@@ -17,6 +18,11 @@ import { UuidIdGenerator } from "../adapters/system/UuidIdGenerator";
 import { getDataDir, isTauriRuntime, joinPath, openInOs, pickPdfFile } from "../adapters/tauri/platform";
 import { TauriSqlDriver } from "../adapters/tauri/TauriSqlDriver";
 import type { DocumentStorage } from "../core/ports/DocumentStorage";
+import { makeGetBudgetRealisation } from "../core/usecases/analytics/getBudgetRealisation";
+import { makeGetContractedVsCollected } from "../core/usecases/analytics/getContractedVsCollected";
+import { makeGetNetResult } from "../core/usecases/analytics/getNetResult";
+import { makeGetProjectsInYear } from "../core/usecases/analytics/getProjectsInYear";
+import { makeGetSubcontractorPayments } from "../core/usecases/analytics/getSubcontractorPayments";
 import { makeArchiveContract } from "../core/usecases/contract/archiveContract";
 import { makeCreateContract } from "../core/usecases/contract/createContract";
 import { makeGetContract } from "../core/usecases/contract/getContract";
@@ -101,6 +107,7 @@ export async function createContainer(): Promise<Container> {
   const projectRepo = new SqliteProjectRepository(db, clock);
   const contractRepo = new SqliteContractRepository(db, clock);
   const invoiceRepo = new SqliteInvoiceRepository(db, clock);
+  const analyticsQuery = new SqliteAnalyticsQuery(db, projectRepo);
 
   if (inMemoryDocuments && import.meta.env.MODE === "e2e") {
     window.__TEST__ = makeTestHooks(db, inMemoryDocuments, (await import("./e2eFixtures")).e2eFixtures);
@@ -145,6 +152,11 @@ export async function createContainer(): Promise<Container> {
       attachInvoiceDocument: makeAttachInvoiceDocument({ invoiceRepo, documents, clock }),
       removeInvoiceDocument: makeRemoveInvoiceDocument({ invoiceRepo, documents, clock }),
       openInvoiceDocument: makeOpenInvoiceDocument({ invoiceRepo, documents }),
+      getContractedVsCollected: makeGetContractedVsCollected({ analyticsQuery }),
+      getSubcontractorPayments: makeGetSubcontractorPayments({ analyticsQuery }),
+      getProjectsInYear: makeGetProjectsInYear({ analyticsQuery }),
+      getNetResult: makeGetNetResult({ analyticsQuery }),
+      getBudgetRealisation: makeGetBudgetRealisation({ analyticsQuery }),
     },
     runtime,
   };

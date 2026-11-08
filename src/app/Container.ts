@@ -1,4 +1,9 @@
-// Spec: AR-001, AR-005, AR-009, UI-080, UI-010, UI-020, UI-030, UI-032, UI-040, UI-041, UI-050, UI-051, UI-053
+// Spec: AR-001, AR-005, AR-009, UI-080, UI-010, UI-020, UI-030, UI-032, UI-040, UI-041, UI-050, UI-051, UI-053, UI-060, UI-061, UI-062, UI-063, UI-064, UI-065, UI-033
+import type { GetBudgetRealisation } from "../core/usecases/analytics/getBudgetRealisation";
+import type { GetContractedVsCollected } from "../core/usecases/analytics/getContractedVsCollected";
+import type { GetNetResult } from "../core/usecases/analytics/getNetResult";
+import type { GetProjectsInYear } from "../core/usecases/analytics/getProjectsInYear";
+import type { GetSubcontractorPayments } from "../core/usecases/analytics/getSubcontractorPayments";
 import type { ArchiveContract } from "../core/usecases/contract/archiveContract";
 import type { CreateContract } from "../core/usecases/contract/createContract";
 import type { GetContract } from "../core/usecases/contract/getContract";
@@ -76,6 +81,11 @@ export interface UseCases {
   attachInvoiceDocument: AttachInvoiceDocument;
   removeInvoiceDocument: RemoveInvoiceDocument;
   openInvoiceDocument: OpenInvoiceDocument;
+  getContractedVsCollected: GetContractedVsCollected;
+  getSubcontractorPayments: GetSubcontractorPayments;
+  getProjectsInYear: GetProjectsInYear;
+  getNetResult: GetNetResult;
+  getBudgetRealisation: GetBudgetRealisation;
 }
 
 export type RuntimeMode = "tauri" | "browser";

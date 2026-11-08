@@ -11,3 +11,8 @@ export function formatPercent(numerator: number, denominator: number): string {
   const rounded = Math.sign(tenths) * Math.round(Math.abs(tenths));
   return `${(rounded / 10).toFixed(1)} %`;
 }
+
+/** Formats a percentage computed by the core (AN-000d), e.g. 33.3 → "33.3 %"; null → "—". */
+export function formatPercentValue(value: number | null): string {
+  return value === null ? "—" : `${value.toFixed(1)} %`;
+}

@@ -106,7 +106,8 @@ test("TC-M2-036 project detail page shows header data and summary cards with zer
   await expect(main).toContainText("31.12.2026");
   await expect(main).toContainText("€600,000.00");
   for (const card of ["Contracted", "Collected", "Contracted to subcontractors", "Paid to subcontractors", "Net"]) {
-    await expect(main.getByText(card, { exact: true }).locator("..")).toContainText("€0.00");
+    // `.first()`: the summary cards precede the UI-033 realisation card, which also has a "Collected" label.
+    await expect(main.getByText(card, { exact: true }).first().locator("..")).toContainText("€0.00");
   }
   // Contracts tab (default, M3): Office Tower has no contracts.
   await expect(main.getByRole("tab", { name: "Contracts" })).toHaveAttribute("aria-selected", "true");

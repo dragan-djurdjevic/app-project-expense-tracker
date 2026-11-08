@@ -1,4 +1,4 @@
-// Spec: UI-001, UI-010, UI-020, UI-030, UI-040, UI-050
+// Spec: UI-001, UI-010, UI-020, UI-030, UI-040, UI-050, UI-061, UI-062, UI-063, UI-064, UI-065
 export interface NavItem {
   /** i18n key of the sidebar label and screen title. */
   labelKey: string;
@@ -38,35 +38,35 @@ export const NAV_ITEMS: readonly NavItem[] = [
     labelKey: "nav.analyticsContracted",
     route: "/analytics/contracted-vs-collected",
     testId: "nav-analytics-contracted",
-    placeholderMilestone: "M5",
+    placeholderMilestone: null,
     section: "analytics",
   },
   {
     labelKey: "nav.analyticsSubcontractors",
     route: "/analytics/subcontractor-payments",
     testId: "nav-analytics-subcontractors",
-    placeholderMilestone: "M5",
+    placeholderMilestone: null,
     section: "analytics",
   },
   {
     labelKey: "nav.analyticsProjects",
     route: "/analytics/projects-per-year",
     testId: "nav-analytics-projects",
-    placeholderMilestone: "M5",
+    placeholderMilestone: null,
     section: "analytics",
   },
   {
     labelKey: "nav.analyticsNet",
     route: "/analytics/net-result",
     testId: "nav-analytics-net",
-    placeholderMilestone: "M5",
+    placeholderMilestone: null,
     section: "analytics",
   },
   {
     labelKey: "nav.analyticsBudget",
     route: "/analytics/budget-realisation",
     testId: "nav-analytics-budget",
-    placeholderMilestone: "M5",
+    placeholderMilestone: null,
     section: "analytics",
   },
   {

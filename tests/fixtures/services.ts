@@ -1,10 +1,16 @@
-// Spec: AR-004, AR-005, DM-040, DM-050, DS-004
+// Spec: AR-004, AR-005, DM-040, DM-050, DS-004, AN-000
+import { SqliteAnalyticsQuery } from "../../src/adapters/sqlite/SqliteAnalyticsQuery";
 import { SqliteContractRepository } from "../../src/adapters/sqlite/SqliteContractRepository";
 import { SqliteInvestorRepository } from "../../src/adapters/sqlite/SqliteInvestorRepository";
 import { SqliteInvoiceRepository } from "../../src/adapters/sqlite/SqliteInvoiceRepository";
 import { SqliteSettingsRepository } from "../../src/adapters/sqlite/SqliteSettingsRepository";
 import { SqliteProjectRepository } from "../../src/adapters/sqlite/SqliteProjectRepository";
 import { SqliteSubcontractorRepository } from "../../src/adapters/sqlite/SqliteSubcontractorRepository";
+import { makeGetBudgetRealisation } from "../../src/core/usecases/analytics/getBudgetRealisation";
+import { makeGetContractedVsCollected } from "../../src/core/usecases/analytics/getContractedVsCollected";
+import { makeGetNetResult } from "../../src/core/usecases/analytics/getNetResult";
+import { makeGetProjectsInYear } from "../../src/core/usecases/analytics/getProjectsInYear";
+import { makeGetSubcontractorPayments } from "../../src/core/usecases/analytics/getSubcontractorPayments";
 import { makeArchiveContract } from "../../src/core/usecases/contract/archiveContract";
 import { makeCreateContract } from "../../src/core/usecases/contract/createContract";
 import { makeGetContract } from "../../src/core/usecases/contract/getContract";
@@ -45,7 +51,7 @@ import { controlledClock } from "./controlledClock";
 import { migratedDb } from "./db";
 import { sequentialIds } from "./fixedClock";
 
-/** Real SQLite repositories on a fresh in-memory DB, wired to the M2–M4 use cases like `composition.ts`. */
+/** Real SQLite repositories on a fresh in-memory DB, wired to the M2–M5 use cases like `composition.ts`. */
 export async function setupServices() {
   const db = await migratedDb();
   const clock = controlledClock("2026-01-01T00:00:00.000Z");
@@ -56,6 +62,7 @@ export async function setupServices() {
   const contractRepo = new SqliteContractRepository(db, clock);
   const invoiceRepo = new SqliteInvoiceRepository(db, clock);
   const settingsRepo = new SqliteSettingsRepository(db);
+  const analyticsQuery = new SqliteAnalyticsQuery(db, projectRepo);
   const documents = new InMemoryDocumentStorage(sequentialIds("90000000-0000-4000-8000-"));
   return {
     db,
@@ -66,6 +73,7 @@ export async function setupServices() {
     contractRepo,
     invoiceRepo,
     settingsRepo,
+    analyticsQuery,
     documents,
     listInvestors: makeListInvestors({ investorRepo, projectRepo }),
     getInvestor: makeGetInvestor({ investorRepo }),
@@ -102,6 +110,11 @@ export async function setupServices() {
     attachInvoiceDocument: makeAttachInvoiceDocument({ invoiceRepo, documents, clock }),
     removeInvoiceDocument: makeRemoveInvoiceDocument({ invoiceRepo, documents, clock }),
     openInvoiceDocument: makeOpenInvoiceDocument({ invoiceRepo, documents }),
+    getContractedVsCollected: makeGetContractedVsCollected({ analyticsQuery }),
+    getSubcontractorPayments: makeGetSubcontractorPayments({ analyticsQuery }),
+    getProjectsInYear: makeGetProjectsInYear({ analyticsQuery }),
+    getNetResult: makeGetNetResult({ analyticsQuery }),
+    getBudgetRealisation: makeGetBudgetRealisation({ analyticsQuery }),
   };
 }
 
