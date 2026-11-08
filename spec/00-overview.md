@@ -24,6 +24,8 @@ A single user per computer. No login, no roles, no multi-user concurrency.
 - Analytics views AN-1 … AN-4 (see `05-analytics.md`), filterable by year, and AN-5 budget realisation (cumulative).
 - English and Serbian (Latin script) UI, language selectable in Settings (i18n, UI-090/UI-091).
 - Local SQLite database stored in the OS app-data directory.
+- Demo mode (`06-demo.md`, AR-013): a separate demo database and documents folder preloaded with sample data,
+  switchable in Settings and resettable; live data is never touched by demo mode.
 
 ## OV-006 Out of scope
 - Authentication / authorisation.

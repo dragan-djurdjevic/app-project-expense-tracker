@@ -1,4 +1,4 @@
-// Spec: AR-001, AR-005, AR-009, UI-080, UI-010, UI-020, UI-030, UI-032, UI-040, UI-041, UI-050, UI-051, UI-053, UI-060, UI-061, UI-062, UI-063, UI-064, UI-065, UI-033
+// Spec: AR-001, AR-005, AR-009, AR-013, UI-080, UI-081, UI-010, UI-020, UI-030, UI-032, UI-040, UI-041, UI-050, UI-051, UI-053, UI-060, UI-061, UI-062, UI-063, UI-064, UI-065, UI-033
 import type { GetBudgetRealisation } from "../core/usecases/analytics/getBudgetRealisation";
 import type { GetContractedVsCollected } from "../core/usecases/analytics/getContractedVsCollected";
 import type { GetNetResult } from "../core/usecases/analytics/getNetResult";
@@ -42,6 +42,7 @@ import type { GetSubcontractor } from "../core/usecases/subcontractor/getSubcont
 import type { ListSubcontractors } from "../core/usecases/subcontractor/listSubcontractors";
 import type { RestoreSubcontractor } from "../core/usecases/subcontractor/restoreSubcontractor";
 import type { UpdateSubcontractor } from "../core/usecases/subcontractor/updateSubcontractor";
+import type { Profile } from "./profile";
 
 export interface UseCases {
   getSettings: GetSettings;
@@ -100,6 +101,12 @@ export interface RuntimeInfo {
   openFolder: ((path: string) => Promise<void>) | null;
   /** UI-053: native PDF file dialog (Tauri mode); null in browser mode (hidden file input instead). */
   pickPdf: (() => Promise<InvoiceAttachmentFile | null>) | null;
+  /** AR-013: the active data profile, fixed for the lifetime of the process. */
+  profile: Profile;
+  /** AR-013: relaunches the app with the given profile. */
+  switchProfile: (profile: Profile) => Promise<void>;
+  /** AR-013: discards the demo data and relaunches (only meaningful in `demo`). */
+  resetDemo: () => Promise<void>;
 }
 
 export interface Container {
@@ -107,7 +114,7 @@ export interface Container {
   runtime: RuntimeInfo;
 }
 
-/** Raised when the startup sequence (AR-010 steps 1–3) fails. */
+/** Raised when the startup sequence (AR-010 steps 1–3a) fails. */
 export class StartupError extends Error {
   constructor(
     message: string,

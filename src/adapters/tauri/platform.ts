@@ -1,4 +1,4 @@
-// Spec: AR-009, UI-080, UI-053, DS-004
+// Spec: AR-009, AR-013, UI-080, UI-081, UI-053, DS-004
 import { invoke } from "@tauri-apps/api/core";
 import { join } from "@tauri-apps/api/path";
 import { open } from "@tauri-apps/plugin-dialog";
@@ -10,9 +10,24 @@ export function isTauriRuntime(): boolean {
   return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 }
 
-/** Effective data dir: `ARCHTRACKER_DATA_DIR` or the app data dir (resolved by the Rust side). */
+/** AR-013: the active profile's data dir under `<root>` (`ARCHTRACKER_DATA_DIR` or the app data dir). */
 export function getDataDir(): Promise<string> {
   return invoke<string>("get_data_dir");
+}
+
+/** AR-013: the active profile as resolved by the Rust side from `<root>/profile.json`. */
+export async function getProfile(): Promise<"live" | "demo"> {
+  return (await invoke<string>("get_profile")) === "demo" ? "demo" : "live";
+}
+
+/** AR-013: writes `profile.json` and restarts the app. */
+export function switchProfile(profile: "live" | "demo"): Promise<void> {
+  return invoke<void>("switch_profile", { profile });
+}
+
+/** AR-013: marks the demo data for deletion at the next start and restarts the app. */
+export function resetDemo(): Promise<void> {
+  return invoke<void>("reset_demo");
 }
 
 export function joinPath(...parts: string[]): Promise<string> {

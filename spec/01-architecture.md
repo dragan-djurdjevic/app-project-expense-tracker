@@ -122,6 +122,7 @@ src/
   app/
     composition.ts   # builds the container: chooses Tauri vs browser adapters
     AppProvider.tsx  # React context exposing use cases
+    demo/            # demo seed (DEMO-001), dataset (DEMO-003), assets/ with demo PDFs (DEMO-004)
   ui/
     screens/         # one folder per screen (UI-* IDs)
     components/      # shared: DataTable, MoneyInput, YearFilter, ConfirmDialog, ...
@@ -149,21 +150,24 @@ validation/          # validator reports Mx-report.md
 
 ## AR-009 Runtime modes
 `src/app/composition.ts` detects the runtime:
-- **Tauri mode** (`window.__TAURI_INTERNALS__` present): `TauriSqlDriver` with DB file `tracker.db` in the app data
-  dir, `FsDocumentStorage` writing to `<appData>/documents/`.
-- **Data dir override:** if the environment variable `ARCHTRACKER_DATA_DIR` is set when the app starts, the Rust side
-  uses it instead of the app data dir for `tracker.db` and `documents/`. The frontend gets the effective path from
-  the Tauri command `get_data_dir`. Used by the smoke tests (AR-012) so they never touch the user's real data.
+- **Tauri mode** (`window.__TAURI_INTERNALS__` present): `TauriSqlDriver` with DB file `tracker.db` in the active
+  profile's data dir (AR-013), `FsDocumentStorage` writing to `<profile data dir>/documents/`.
+- **Data root override:** if the environment variable `ARCHTRACKER_DATA_DIR` is set when the app starts, the Rust side
+  uses it instead of the app data dir as the data root `<root>` (AR-013). The frontend gets the effective path of
+  the **active profile's** data dir from the Tauri command `get_data_dir`. Used by the smoke tests (AR-012) so they
+  never touch the user's real data.
 - **Browser mode** (no Tauri): `SqlJsDriver` in memory, `InMemoryDocumentStorage`. Used only by E2E tests and
   `yarn dev:web`. Browser mode exposes `window.__TEST__ = { reset(), seed(fixtureName) }` **only** when
-  `import.meta.env.MODE === "e2e"`.
+  `import.meta.env.MODE === "e2e"`. The profile in browser mode is defined in AR-013.
 
 ## AR-010 Startup sequence
 1. Open DB (create file if missing).
 2. Run pending migrations in a transaction (table `schema_migrations(version INTEGER PK, applied_at TEXT)`).
 3. Ensure `settings` row exists (default currency `EUR`, default VAT 2000 bp, language `en`); load settings and set
    the UI language (UI-090).
-4. Render app shell. If steps 1–2 fail, show a full-screen error with the message and the DB path.
+3a. Only in the `demo` profile (AR-013): run the demo seed (DEMO-001; a no-op when demo data already exists). A
+   loading indicator is shown while seeding.
+4. Render app shell. If steps 1–2 or 3a fail, show a full-screen error with the message and the DB path.
 
 ## AR-011 package.json scripts (contract for agents)
 | Script | Does |
@@ -191,6 +195,7 @@ Goal: confirm as much as possible locally; CI only adds what physically needs Wi
 | Real Tauri app starts, SQLite plugin works, migrations run | local (macOS) | `yarn smoke:mac`: `tauri build --bundles app`; start `<bundle>.app/Contents/MacOS/<binary>` with `ARCHTRACKER_DATA_DIR=<fresh temp dir>`; wait up to 20 s; assert the process is alive, `tracker.db` exists and `sqlite3 tracker.db "SELECT version FROM schema_migrations ORDER BY version"` prints the versions of all migrations (`1`, `2`; DS-006); kill the process; delete the temp dir. Exit code ≠ 0 on any failure. |
 | Windows installer builds | local (macOS cross-compile) | `yarn build:win-cross` produces `src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*-setup.exe`; validator asserts the file exists and is > 1 MB. Tauri marks this cross-compile as experimental; if it breaks for tooling reasons, the validator reports it as FAIL with the error, never silently skips it. |
 | Installer installs and app starts on Windows | CI (`windows-latest`) | Same checks as `smoke:mac`, but on the installed app after a silent NSIS install. Needs a push. |
+| Demo profile is separate, seeded and resettable | local (macOS) | `yarn smoke:mac` continues after the check above, with the same temp `<root>` and the same bundle. Each start waits up to 30 s for its condition, then kills the process. **(1)** Start live → `<root>/tracker.db` has 0 investors; record its SHA-256. **(2)** Write `<root>/profile.json` = `{"profile":"demo"}`, start → `<root>/demo/tracker.db` has 4 investors and 39 invoices (DEMO-003), `<root>/demo/documents/` holds 3 `.pdf` files. **(3)** Run `UPDATE investor SET name = 'Changed'` on the demo DB, create `<root>/demo/.reset`, start → all 4 investor names are as in DEMO-003 and `.reset` is gone. **(4)** Write `{"profile":"live"}`, start → `<root>/tracker.db` still has 0 investors. After each of (2)–(4), the SHA-256 of `<root>/tracker.db` equals the value recorded in (1). |
 
 **Developer machine prerequisites (macOS):**
 - nvm with Node 22 (`nvm install` in the repo root reads `.nvmrc`); `corepack enable` once per Node install (makes the pinned Yarn 4 available).
@@ -200,3 +205,43 @@ Goal: confirm as much as possible locally; CI only adds what physically needs Wi
 - For `build:win-cross`: `brew install nsis llvm lld`, `cargo install --locked cargo-xwin`,
   `rustup target add x86_64-pc-windows-msvc`, and `$(brew --prefix llvm)/bin` on `PATH`.
 - `README.md` lists these; `scripts/check-env.mjs` (`yarn check:env`) verifies them and prints what's missing.
+
+## AR-013 Profiles: live and demo data separation
+The app has two **profiles**: `live` (the user's real data, default) and `demo` (sample data, `06-demo.md`). Each
+profile has its own SQLite file and documents folder. Nothing is shared between them: no table, row or file of one
+profile is ever read or written while the other is active.
+
+- **Tauri layout** (`<root>` = app data dir, or `ARCHTRACKER_DATA_DIR`, AR-009):
+  | Profile | Data dir | DB | Documents |
+  |---|---|---|---|
+  | `live` | `<root>` | `<root>/tracker.db` | `<root>/documents/` |
+  | `demo` | `<root>/demo` | `<root>/demo/tracker.db` | `<root>/demo/documents/` |
+  The live layout is unchanged from earlier versions, so existing installations keep their data.
+- **Active profile:** stored in `<root>/profile.json` as `{"profile":"live"}` or `{"profile":"demo"}`. It is outside
+  both databases. A missing, unreadable or invalid file means `live`. The profile is fixed for the lifetime of the
+  process.
+- **Rust side** (`src-tauri/src/lib.rs`). At setup, before any plugin opens a DB:
+  1. resolve `<root>` and the active profile;
+  2. if the profile is `demo` and `<root>/demo/.reset` exists, delete the whole `<root>/demo/` folder;
+  3. create the profile's `documents/` dir;
+  4. allow the fs plugin scope **only** on the active profile's `documents/` dir.
+  Commands:
+  - `get_data_dir` → the active profile's data dir;
+  - `get_profile` → `"live" | "demo"`;
+  - `switch_profile(profile)` → writes `profile.json`, then restarts the app (`AppHandle::restart`);
+  - `reset_demo()` → only when the active profile is `demo` (otherwise returns an error and changes nothing): creates
+    `<root>/demo/.reset`, then restarts the app.
+  Deleting happens only at the next start, so no open DB file is ever deleted.
+- **Browser mode:** the profile is `demo` when the start URL has the query `?profile=demo`, otherwise `live`. It is
+  read once at startup. Each page load starts with a fresh in-memory DB.
+  - Switching to demo: `location.assign("/?profile=demo")`. Switching to live: `location.assign("/")`.
+  - Reset demo: `location.assign("/?profile=demo")`.
+- **Container:** `RuntimeInfo` (`src/app/Container.ts`) gains:
+  - `profile: "live" | "demo"`;
+  - `switchProfile(profile): Promise<void>` (relaunch, per mode as above);
+  - `resetDemo(): Promise<void>` (only meaningful in `demo`).
+  The UI reads these from `src/app` (AR-002). `src/core/**` knows nothing about profiles. Both profiles use the same
+  use cases, repositories and migrations.
+- The pure helper `profileFromSearch(search: string): "live" | "demo"` (`src/app/profile.ts`) returns `demo` only
+  when the URL query has `profile=demo` exactly, otherwise `live`. The browser mode uses it. In Tauri mode the
+  frontend uses `get_profile` and never reads `profile.json` itself.

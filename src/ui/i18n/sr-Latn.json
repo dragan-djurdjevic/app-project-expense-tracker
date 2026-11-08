@@ -196,7 +196,32 @@
     "languageOption": {
       "en": "English",
       "sr-Latn": "Srpski (latinica)"
+    },
+    "demo": {
+      "title": "Demo režim",
+      "help": "Demo režim koristi sopstvenu bazu sa probnim podacima. Vaši stvarni podaci se ne prikazuju, ne menjaju i ne brišu.",
+      "toggle": "Demo režim",
+      "reset": "Vrati demo podatke na početne",
+      "switchToDemo": {
+        "title": "Preći u demo režim?",
+        "message": "Aplikacija će se ponovo pokrenuti i otvoriti demo bazu. Vaši stvarni podaci ostaju netaknuti.",
+        "confirm": "Ponovo pokreni u demo režimu"
+      },
+      "switchToLive": {
+        "title": "Preći na stvarne podatke?",
+        "message": "Aplikacija će se ponovo pokrenuti i otvoriti vašu stvarnu bazu. Izmene u demo režimu se čuvaju dok ih ne vratite na početne.",
+        "confirm": "Ponovo pokreni sa stvarnim podacima"
+      },
+      "resetDialog": {
+        "title": "Vratiti demo podatke na početne?",
+        "message": "Sve izmene napravljene u demo režimu biće odbačene, a probni podaci vraćeni. Aplikacija će se ponovo pokrenuti.",
+        "confirm": "Vrati i ponovo pokreni"
+      }
     }
+  },
+  "demo": {
+    "banner": "Demo režim — probni podaci, odvojeni od vaših stvarnih zapisa.",
+    "switchToLive": "Pređi na stvarne podatke"
   },
   "errors": {
     "required": "Ovo polje je obavezno.",

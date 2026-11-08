@@ -4,7 +4,7 @@ This repository is **spec-driven**. `spec/` is the single source of truth. Code 
 These rules apply to every agent and every session, including the main session.
 
 ## R1 — The spec is the source of truth
-- Read `spec/00-overview.md` … `spec/05-analytics.md` and the relevant `spec/milestones/Mx.md` before changing code.
+- Read `spec/00-overview.md` … `spec/06-demo.md` and the relevant `spec/milestones/Mx.md` before changing code.
 - Never add behaviour, screens, fields, dependencies or "improvements" the spec does not ask for.
 - If the user asks for a behaviour change, **change the spec first** (with a `spec/CHANGELOG.md` entry and a
   `spec/VERSION` bump), commit it, then implement. Never implement a requested change only in code.
@@ -21,7 +21,7 @@ These rules apply to every agent and every session, including the main session.
 - Bugs found by validation may be fixed only within the spec IDs that are in scope.
 
 ## R3 — Traceability
-- Every spec item has a stable ID (`OV-`, `AR-`, `DM-`, `BR-`, `DS-`, `UI-`, `AN-`, `TC-`). IDs are never
+- Every spec item has a stable ID (`OV-`, `AR-`, `DM-`, `BR-`, `DS-`, `UI-`, `AN-`, `DEMO-`, `TC-`). IDs are never
   renumbered or reused; removed items are struck through and marked `REMOVED in <version>`.
 - Each source file starts with `// Spec: <ID>, <ID>, …` listing what it implements (SQL files: `-- Spec: …`).
 - Each automated test title starts with its TC ID. `yarn spec:trace Mx` must pass.

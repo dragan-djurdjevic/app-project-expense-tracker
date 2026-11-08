@@ -9,6 +9,26 @@ Every spec change gets an entry here **in the same commit** as the spec edit. Fo
 Bump rules: PATCH = wording/clarification with no behaviour change; MINOR = new or changed behaviour;
 MAJOR = reserved for post-POC breaking changes.
 
+## 0.5.1 — 2026-11-08
+- CHANGED DEMO-904: gross-mode 2026 footer margin corrected from 81.1 % to 80.8 %; percentages are always computed
+  from net values (AN-000c). No behaviour change.
+
+## 0.5.0 — 2026-11-08
+- ADDED AR-013: profiles `live` / `demo` with fully separate DB file and documents folder (`<root>/demo/`), active
+  profile in `<root>/profile.json`, Rust commands `get_profile`, `switch_profile`, `reset_demo`, fs scope limited to the
+  active profile, browser-mode profile via `?profile=demo`.
+- ADDED `06-demo.md` with DEMO-001…004 (seed through use cases, relative dates, dataset, demo PDFs) and
+  DEMO-900…906 (expected analytics and overdue invoices).
+- CHANGED AR-007: `src/app/demo/` folder.
+- CHANGED AR-009: `ARCHTRACKER_DATA_DIR` is the data root; `get_data_dir` returns the active profile's dir.
+- CHANGED AR-010: step 3a seeds demo data in the `demo` profile.
+- CHANGED AR-012: smoke checks demo separation, seeding and reset.
+- CHANGED OV-005: demo mode in scope.
+- ADDED UI-003: demo banner and window title suffix.
+- CHANGED UI-080, ADDED UI-081: Settings demo mode switch and reset with confirm dialogs.
+- CHANGED UI-091: demo terminology.
+- ADDED M7 milestone with TC-M7-001…017.
+
 ## 0.4.0 — 2026-11-08
 - ADDED DS-006: migration `0002_settings_language.sql` adds `settings.language`.
 - CHANGED DM-060: new setting `language` (`en` | `sr-Latn`, default `en`).

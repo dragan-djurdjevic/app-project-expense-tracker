@@ -1,4 +1,4 @@
-# Spec: AR-006, AR-011, AR-012, OV-003, DS-006
+# Spec: AR-006, AR-011, AR-012, AR-013, OV-003, DS-006, DEMO-003, DEMO-004
 name: windows-build
 
 on:
@@ -82,6 +82,102 @@ jobs:
           } finally {
             if (-not $proc.HasExited) { Stop-Process -Id $proc.Id -Force }
             Start-Sleep -Seconds 1
+            $uninstaller = Join-Path $installDir "uninstall.exe"
+            if (Test-Path $uninstaller) { Start-Process -FilePath $uninstaller -ArgumentList "/S" -Wait }
+            Remove-Item -Recurse -Force $dataDir -ErrorAction SilentlyContinue
+          }
+
+      - name: TC-M7-015 Windows demo profile smoke test
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $installer = Get-ChildItem "src-tauri/target/release/bundle/nsis/*-setup.exe" | Select-Object -First 1
+          Write-Host "Installing $($installer.Name) silently"
+          Start-Process -FilePath $installer.FullName -ArgumentList "/S" -Wait
+
+          $installDir = Join-Path $env:LOCALAPPDATA "Architecture Project Tracker"
+          if (-not (Test-Path $installDir)) { $installDir = Join-Path $env:ProgramFiles "Architecture Project Tracker" }
+          $exe = Get-ChildItem $installDir -Filter *.exe | Where-Object { $_.Name -notlike "uninstall*" } | Select-Object -First 1
+          if (-not $exe) { throw "Installed app executable not found in $installDir" }
+
+          $dataDir = Join-Path $env:RUNNER_TEMP ("archtracker-demo-" + [guid]::NewGuid())
+          New-Item -ItemType Directory -Path $dataDir | Out-Null
+          $env:ARCHTRACKER_DATA_DIR = $dataDir
+          $liveDb = Join-Path $dataDir "tracker.db"
+          $demoDir = Join-Path $dataDir "demo"
+          $demoDb = Join-Path $demoDir "tracker.db"
+          $profileFile = Join-Path $dataDir "profile.json"
+          $resetMarker = Join-Path $demoDir ".reset"
+          $expectedNames = "Greenleaf Properties|Harbor City Council|Northwind Developments|Summit Retail Group"
+
+          function Invoke-Sql([string]$db, [string]$sql) {
+            if (-not (Test-Path $db)) { return $null }
+            $out = python -c "import sqlite3,sys; c=sqlite3.connect(sys.argv[1]); r=c.execute(sys.argv[2]).fetchall(); c.commit(); print('|'.join(str(x[0]) for x in r))" $db $sql 2>$null
+            if ($LASTEXITCODE -ne 0) { return $null }
+            return $out
+          }
+
+          # Starts the app, waits up to 30 s until $check returns $null, then kills it (AR-012 demo row).
+          function Invoke-Start([string]$label, [scriptblock]$check) {
+            Write-Host "$label`: starting"
+            $proc = Start-Process -FilePath $exe.FullName -PassThru
+            $missing = "not checked"
+            try {
+              $deadline = (Get-Date).AddSeconds(30)
+              while ((Get-Date) -lt $deadline) {
+                if ($proc.HasExited) { throw "$label`: app exited early with code $($proc.ExitCode)" }
+                $missing = & $check
+                if ($null -eq $missing) { break }
+                Start-Sleep -Milliseconds 500
+              }
+              if ($null -ne $missing) { throw "$label`: $missing within 30 s" }
+              Write-Host "$label`: OK"
+            } finally {
+              if (-not $proc.HasExited) { Stop-Process -Id $proc.Id -Force }
+              Start-Sleep -Seconds 1
+            }
+          }
+
+          try {
+            Invoke-Start "(1) live" {
+              $n = Invoke-Sql $liveDb "SELECT COUNT(*) FROM investor"
+              if ($n -eq "0") { $null } else { "live investors = '$n', expected 0" }
+            }
+            # Stop-Process -Force skips SQLite's close-time checkpoint; fold the WAL into tracker.db before hashing.
+            Invoke-Sql $liveDb "PRAGMA wal_checkpoint(TRUNCATE)" | Out-Null
+            $liveHash = (Get-FileHash $liveDb -Algorithm SHA256).Hash
+            function Assert-LiveUnchanged([string]$step) {
+              if ((Get-FileHash $liveDb -Algorithm SHA256).Hash -ne $liveHash) { throw "$step`: SHA-256 of tracker.db changed" }
+              Write-Host "$step`: live tracker.db unchanged"
+            }
+
+            Set-Content -Path $profileFile -Value '{"profile":"demo"}' -NoNewline -Encoding ascii
+            Invoke-Start "(2) demo" {
+              $i = Invoke-Sql $demoDb "SELECT COUNT(*) FROM investor"
+              $v = Invoke-Sql $demoDb "SELECT COUNT(*) FROM invoice"
+              $docs = Join-Path $demoDir "documents"
+              $p = if (Test-Path $docs) { @(Get-ChildItem $docs -Recurse -Filter *.pdf -File).Count } else { 0 }
+              if ($i -eq "4" -and $v -eq "39" -and $p -eq 3) { $null } else { "demo investors = '$i', invoices = '$v', PDFs = $p (expected 4, 39, 3)" }
+            }
+            Assert-LiveUnchanged "(2)"
+
+            Invoke-Sql $demoDb "UPDATE investor SET name = 'Changed'" | Out-Null
+            $changed = Invoke-Sql $demoDb "SELECT name FROM investor ORDER BY name"
+            if ($changed -ne "Changed|Changed|Changed|Changed") { throw "(3): UPDATE on the demo DB failed (names = '$changed')" }
+            New-Item -ItemType File -Path $resetMarker -Force | Out-Null
+            Invoke-Start "(3) demo reset" {
+              $names = Invoke-Sql $demoDb "SELECT name FROM investor ORDER BY name"
+              if ($names -eq $expectedNames -and -not (Test-Path $resetMarker)) { $null } else { "demo names = '$names', .reset present = $(Test-Path $resetMarker)" }
+            }
+            Assert-LiveUnchanged "(3)"
+
+            Set-Content -Path $profileFile -Value '{"profile":"live"}' -NoNewline -Encoding ascii
+            Invoke-Start "(4) live" {
+              $n = Invoke-Sql $liveDb "SELECT COUNT(*) FROM investor"
+              if ($n -eq "0") { $null } else { "live investors = '$n', expected 0" }
+            }
+            Assert-LiveUnchanged "(4)"
+          } finally {
             $uninstaller = Join-Path $installDir "uninstall.exe"
             if (Test-Path $uninstaller) { Start-Process -FilePath $uninstaller -ArgumentList "/S" -Wait }
             Remove-Item -Recurse -Force $dataDir -ErrorAction SilentlyContinue
