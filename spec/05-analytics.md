@@ -88,7 +88,7 @@ Rows: all projects (incl. archived, per AN-000a), sorted by name.
 | Realisation % of contracted | Collected ÷ Contracted |
 | Remaining budget | Budget − Collected (null budget → "—"; negative shown in red) |
 
-Percent columns with a null or 0 budget → "—".
+Percent columns **of budget** (Contracted % of budget, Realisation % of budget) with a null or 0 budget → "—"; Realisation % of contracted is "—" only when Contracted is 0.
 Footer: Σ Budget (non-null only), Σ Contracted, Σ Invoiced, Σ Collected, Σ Remaining budget (projects with a budget
 only). Footer "% of budget" percentages use only projects with a non-null budget in **both** numerator and
 denominator; "Realisation % of contracted" uses all rows.

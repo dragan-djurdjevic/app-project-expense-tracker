@@ -9,6 +9,12 @@ Every spec change gets an entry here **in the same commit** as the spec edit. Fo
 Bump rules: PATCH = wording/clarification with no behaviour change; MINOR = new or changed behaviour;
 MAJOR = reserved for post-POC breaking changes.
 
+## 0.3.8 — 2026-11-08
+- CHANGED AN-5: "—" for null/0 budget applies only to the "% of budget" columns; Realisation % of contracted is
+  "—" only when Contracted is 0.
+- CHANGED TC-M5-011: V6/V7/V9 removal leaves AN-1…AN-4 and AN-5 Collected/realisation unchanged (AN-5 Invoiced
+  includes ISSUED by definition).
+
 ## 0.3.7 — 2026-11-08
 - CHANGED DM-050: invoice input defaults on create/update; `contractId` not re-checked on update (BR-GEN-006);
   `removeDocument` / `openDocument` without an attachment.
