@@ -88,6 +88,14 @@ Direction of an invoice = type of its contract (INCOMING invoice → money in; O
 Archived invoices (BR-GEN-007): `changeStatus`, `attachDocument` and `removeDocument` on an archived invoice return
 BR-GEN-007; `openDocument` is allowed. "Overdue" (UI-050) compares `dueDate` with the local calendar date of `Clock.now()`.
 
+Invoice input defaults: on create, an omitted or null `vatRate` = settings.defaultVatRate and an omitted `status` =
+DRAFT; on `update`, an omitted or null `vatRate` / omitted `status` keeps the stored value. `contractId` is not
+re-checked on `update` (it is immutable, BR-IVC-002): per BR-GEN-006 an invoice stays editable after its contract
+or project is archived.
+
+Document operations: `removeDocument` on an invoice without an attachment is a no-op success; `openDocument` on an
+invoice without an attachment is a programming error (throws, AR-005).
+
 **StoredDocumentRef** = `{ path: string /* relative to storage root */, originalName: string }`.
 
 ## DM-060 Settings (single row)

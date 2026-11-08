@@ -9,6 +9,13 @@ Every spec change gets an entry here **in the same commit** as the spec edit. Fo
 Bump rules: PATCH = wording/clarification with no behaviour change; MINOR = new or changed behaviour;
 MAJOR = reserved for post-POC breaking changes.
 
+## 0.3.7 — 2026-11-08
+- CHANGED DM-050: invoice input defaults on create/update; `contractId` not re-checked on update (BR-GEN-006);
+  `removeDocument` / `openDocument` without an attachment.
+- CHANGED AR-004: `listInvoices` adds `overdue` computed from the `Clock`.
+- CHANGED UI-053: attachment checked when chosen; save order; remove-confirm texts; empty VAT rate field.
+- CHANGED M4: `sample.pdf` is ASCII-only.
+
 ## 0.3.6 — 2026-11-08
 - CHANGED BR-IVC-005, DM-050: same-status change is a no-op success; statuses allowed on create; update/changeStatus
   check transitions from the stored status; error field.
