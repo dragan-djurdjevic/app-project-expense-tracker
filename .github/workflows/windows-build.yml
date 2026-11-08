@@ -143,6 +143,8 @@ jobs:
               $n = Invoke-Sql $liveDb "SELECT COUNT(*) FROM investor"
               if ($n -eq "0") { $null } else { "live investors = '$n', expected 0" }
             }
+            # Stop-Process -Force skips SQLite's close-time checkpoint; fold the WAL into tracker.db before hashing.
+            Invoke-Sql $liveDb "PRAGMA wal_checkpoint(TRUNCATE)" | Out-Null
             $liveHash = (Get-FileHash $liveDb -Algorithm SHA256).Hash
             function Assert-LiveUnchanged([string]$step) {
               if ((Get-FileHash $liveDb -Algorithm SHA256).Hash -ne $liveHash) { throw "$step`: SHA-256 of tracker.db changed" }
