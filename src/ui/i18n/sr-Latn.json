@@ -1,0 +1,230 @@
+{
+  "common": {
+    "appTitle": "Architecture Project Tracker",
+    "comingIn": "Dolazi u {{milestone}}",
+    "save": "Sačuvaj",
+    "saved": "Sačuvano",
+    "startupError": {
+      "title": "Aplikacija nije mogla da se pokrene",
+      "dbPath": "Datoteka baze podataka"
+    },
+    "new": "Novi",
+    "cancel": "Otkaži",
+    "edit": "Izmeni",
+    "archive": "Arhiviraj",
+    "restore": "Vrati",
+    "open": "Otvori",
+    "actions": "Akcije",
+    "archived": "Arhivirano",
+    "showArchived": "Prikaži arhivirane",
+    "search": "Pretraga",
+    "noRecords": "Još nema zapisa.",
+    "noMatches": "Nijedan zapis ne odgovara pretrazi.",
+    "allYears": "Sve godine",
+    "datePlaceholder": "DD.MM.YYYY",
+    "confirmArchive": {
+      "title": "Arhiviranje zapisa",
+      "message": "Arhivirati „{{name}}“? Zapis se više ne prikazuje u listama, ali se čuva u istoriji i može se vratiti."
+    },
+    "all": "Sve",
+    "allProjects": "Svi projekti"
+  },
+  "nav": {
+    "projects": "Projekti",
+    "contracts": "Ugovori",
+    "invoices": "Fakture",
+    "investors": "Investitori",
+    "subcontractors": "Podizvođači",
+    "analytics": "Analitika",
+    "analyticsContracted": "Ugovoreno i naplaćeno",
+    "analyticsSubcontractors": "Plaćanja podizvođačima",
+    "analyticsProjects": "Projekti po godinama",
+    "analyticsNet": "Neto rezultat",
+    "analyticsBudget": "Realizacija budžeta",
+    "settings": "Podešavanja"
+  },
+  "entity": {
+    "investor": {
+      "singular": "Investitor",
+      "new": "Novi investitor",
+      "edit": "Izmena: investitor",
+      "name": "Naziv",
+      "vatNumber": "PIB",
+      "contactPerson": "Kontakt osoba",
+      "email": "E-pošta",
+      "phone": "Telefon",
+      "projects": "Projekti"
+    },
+    "subcontractor": {
+      "singular": "Podizvođač",
+      "new": "Novi podizvođač",
+      "edit": "Izmena: podizvođač",
+      "name": "Naziv",
+      "vatNumber": "PIB",
+      "contactPerson": "Kontakt osoba",
+      "email": "E-pošta",
+      "phone": "Telefon",
+      "industry": "Delatnost"
+    },
+    "project": {
+      "singular": "Projekat",
+      "new": "Novi projekat",
+      "edit": "Izmena: projekat",
+      "name": "Naziv",
+      "investor": "Investitor",
+      "status": "Status",
+      "deadline": "Rok",
+      "budget": "Budžet",
+      "year": "Godina",
+      "summary": {
+        "contracted": "Ugovoreno",
+        "collected": "Naplaćeno",
+        "contractedOut": "Ugovoreno sa podizvođačima",
+        "paidOut": "Plaćeno podizvođačima",
+        "net": "Neto"
+      }
+    },
+    "contract": {
+      "singular": "Ugovor",
+      "new": "Novi ugovor",
+      "edit": "Izmena: ugovor",
+      "number": "Broj",
+      "type": "Tip",
+      "project": "Projekat",
+      "counterparty": "Druga ugovorna strana",
+      "subcontractor": "Podizvođač",
+      "investor": "Investitor",
+      "date": "Datum",
+      "value": "Vrednost (neto)",
+      "invoiced": "Fakturisano",
+      "paid": "Plaćeno",
+      "description": "Opis",
+      "typeBadge": {
+        "INCOMING": "Ul",
+        "OUTGOING": "Iz"
+      }
+    },
+    "invoice": {
+      "singular": "Faktura",
+      "new": "Nova faktura",
+      "edit": "Izmena: faktura",
+      "number": "Broj",
+      "direction": "Smer",
+      "contract": "Ugovor",
+      "project": "Projekat",
+      "date": "Datum",
+      "dueDate": "Rok plaćanja",
+      "net": "Neto",
+      "vatPercent": "PDV %",
+      "gross": "Bruto",
+      "status": "Status",
+      "attachment": "Prilog",
+      "value": "Vrednost (neto)",
+      "vatRate": "Stopa PDV-a (%)",
+      "vatAmount": "Iznos PDV-a",
+      "description": "Opis",
+      "contractOption": "{{number}} — {{project}} ({{direction}})",
+      "invoicedSoFar": "Dosad fakturisano: {{invoiced}} od vrednosti ugovora {{value}}",
+      "overInvoiced": "Čuvanjem ove fakture biće premašena vrednost ugovora.",
+      "attach": "Priloži PDF",
+      "replace": "Zameni",
+      "remove": "Ukloni",
+      "confirmRemove": {
+        "title": "Uklanjanje priloga",
+        "message": "Ukloniti prilog „{{name}}“?"
+      }
+    }
+  },
+  "enum": {
+    "projectStatus": {
+      "PLANNED": "Planiran",
+      "ACTIVE": "Aktivan",
+      "ON_HOLD": "Na čekanju",
+      "DONE": "Završen",
+      "CANCELLED": "Otkazan"
+    },
+    "contractType": {
+      "INCOMING": "Ulazni",
+      "OUTGOING": "Izlazni"
+    },
+    "invoiceStatus": {
+      "DRAFT": "Nacrt",
+      "ISSUED": "Izdata",
+      "PAID": "Plaćena",
+      "CANCELLED": "Stornirana"
+    }
+  },
+  "analytics": {
+    "year": "Godina",
+    "gross": "Bruto iznosi",
+    "netSuffix": "{{label}} (neto)",
+    "project": "Projekat",
+    "investor": "Investitor",
+    "status": "Status",
+    "deadline": "Rok",
+    "budget": "Budžet",
+    "contracted": "Ugovoreno",
+    "collected": "Naplaćeno",
+    "collectedPercent": "Naplaćeno %",
+    "contractedOut": "Ugovoreno sa podizvođačima",
+    "paidOut": "Plaćeno podizvođačima",
+    "paidPercent": "Plaćeno % od ugovorenog",
+    "collectedFromInvestor": "Naplaćeno od investitora",
+    "sharePercent": "Udeo podizvođača %",
+    "retained": "Zadržano u kompaniji",
+    "retainedPercent": "Zadržano %",
+    "contractedInYear": "Ugovoreno u godini",
+    "net": "Neto",
+    "marginPercent": "Neto marža %",
+    "contractedPercentOfBudget": "Ugovoreno % budžeta",
+    "invoiced": "Fakturisano",
+    "realisationPercentOfBudget": "Realizacija % budžeta",
+    "realisationPercentOfContracted": "Realizacija % ugovorenog",
+    "remaining": "Preostali budžet",
+    "footerProjects": "Projekti: {{count}}",
+    "footerProjectsContracted": "Projekti: {{count}} (ugovoreno u godini: {{contracted}})",
+    "expand": "Prikaži podizvođače"
+  },
+  "settings": {
+    "currency": "Valuta",
+    "defaultVatRate": "Podrazumevana stopa PDV-a (%)",
+    "dbPath": "Datoteka baze podataka",
+    "documentsPath": "Folder dokumenata",
+    "openFolder": "Otvori folder",
+    "inMemory": "U memoriji (režim pregledača)",
+    "language": "Jezik",
+    "languageOption": {
+      "en": "English",
+      "sr-Latn": "Srpski (latinica)"
+    }
+  },
+  "errors": {
+    "required": "Ovo polje je obavezno.",
+    "format": "Neispravan format.",
+    "money": {
+      "invalid": "Neispravan iznos."
+    },
+    "unexpected": "Neočekivana greška: {{message}}",
+    "vat": {
+      "duplicate": "Ovaj PIB je već u upotrebi."
+    },
+    "parentArchived": "Izabrani zapis je arhiviran.",
+    "archivedReadOnly": "Arhivirani zapisi su samo za čitanje. Vratite zapis da biste ga izmenili.",
+    "notFound": "Zapis nije pronađen.",
+    "contract": {
+      "subcontractorRequired": "Za izlazne ugovore podizvođač je obavezan.",
+      "subcontractorForbidden": "Ulazni ugovori ne mogu imati podizvođača.",
+      "numberDuplicate": "Ovaj broj ugovora se već koristi na ovom projektu."
+    },
+    "immutable": "Ovo polje ne može da se menja posle kreiranja.",
+    "invoice": {
+      "numberDuplicate": "Ovaj broj fakture se već koristi na ovom ugovoru.",
+      "dueBeforeDate": "Rok plaćanja ne može biti pre datuma fakture.",
+      "statusTransition": "Ova promena statusa nije dozvoljena."
+    },
+    "attachment": {
+      "notPdf": "Datoteka mora biti PDF.",
+      "tooLarge": "Datoteka ne sme biti veća od 20 MB."
+    }
+  }
+}

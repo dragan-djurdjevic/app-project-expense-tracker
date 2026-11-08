@@ -1,7 +1,10 @@
-// Spec: UI-002a, BR-GEN-007
+// Spec: UI-002a, BR-GEN-007, UI-002, DM-060
 import { Badge, Group, Table, Text, UnstyledButton } from "@mantine/core";
 import { useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { useApp } from "../../app/AppProvider";
+import type { Language } from "../../core/domain/Settings";
+import { compareText } from "../format/locale";
 
 export type SortValue = string | number | null;
 
@@ -23,9 +26,9 @@ interface Row {
   archivedAt: string | null;
 }
 
-function compare(a: SortValue, b: SortValue): number {
+function compare(a: SortValue, b: SortValue, language: Language): number {
   if (typeof a === "number" && typeof b === "number") return a - b;
-  return String(a).localeCompare(String(b), "en", { sensitivity: "base", numeric: true });
+  return compareText(String(a), String(b), language);
 }
 
 /**
@@ -48,6 +51,7 @@ export function DataTable<T extends Row>({
   emptyText: string;
 }) {
   const { t } = useTranslation();
+  const { settings } = useApp();
   const [sort, setSort] = useState<SortState>(defaultSort);
 
   const sorted = useMemo(() => {
@@ -60,9 +64,9 @@ export function DataTable<T extends Row>({
       if (a === null && b === null) return 0;
       if (a === null) return 1;
       if (b === null) return -1;
-      return factor * compare(a, b);
+      return factor * compare(a, b, settings.language);
     });
-  }, [rows, columns, sort]);
+  }, [rows, columns, sort, settings.language]);
 
   const toggle = (key: string) =>
     setSort((current) =>

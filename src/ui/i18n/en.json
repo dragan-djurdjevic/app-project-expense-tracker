@@ -191,7 +191,12 @@
     "dbPath": "Database file",
     "documentsPath": "Documents folder",
     "openFolder": "Open folder",
-    "inMemory": "In-memory (browser mode)"
+    "inMemory": "In-memory (browser mode)",
+    "language": "Language",
+    "languageOption": {
+      "en": "English",
+      "sr-Latn": "Srpski (latinica)"
+    }
   },
   "errors": {
     "required": "This field is required.",

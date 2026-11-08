@@ -1,4 +1,4 @@
-// Spec: AR-009, UI-001, UI-002a, UI-060
+// Spec: AR-009, UI-001, UI-002a, UI-060, UI-080, UI-090
 import { expect, type Locator, type Page } from "@playwright/test";
 
 /**
@@ -64,4 +64,11 @@ export function drawer(page: Page, title: string): Locator {
 export async function toggleSwitch(page: Page, testId: string): Promise<void> {
   const id = await page.getByTestId(testId).getAttribute("id");
   await page.locator(`label[for="${id}"]`).first().click();
+}
+
+/** UI-080: on the Settings screen, selects a language option (e.g. "Srpski (latinica)") and saves. */
+export async function setLanguage(page: Page, option: "English" | "Srpski (latinica)"): Promise<void> {
+  await pick(page, "field-language", option);
+  await page.getByTestId("btn-save").click();
+  await expect(page.getByText(option === "English" ? "Saved" : "Sačuvano", { exact: true })).toBeVisible();
 }

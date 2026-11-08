@@ -1,4 +1,4 @@
-// Spec: DS-002
+// Spec: DS-002, DS-006
 import type { Migration } from "./runMigrations";
 
 const files = import.meta.glob<string>("./migrations/*.sql", { query: "?raw", import: "default", eager: true });

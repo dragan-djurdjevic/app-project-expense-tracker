@@ -1,10 +1,11 @@
-// Spec: UI-051, UI-052, UI-053, UI-002, UI-002b, DM-050, BR-IVC-002, BR-IVC-005, BR-IVC-006, BR-IVC-007, BR-IVC-008, BR-GEN-006, BR-GEN-007, UI-032, UI-090
+// Spec: UI-051, UI-052, UI-053, UI-002, UI-002b, DM-050, BR-IVC-002, BR-IVC-005, BR-IVC-006, BR-IVC-007, BR-IVC-008, BR-GEN-006, BR-GEN-007, UI-032, UI-090, DM-060
 import { Alert, Input, Select, Text, TextInput, Textarea } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useApp } from "../../../app/AppProvider";
 import type { ContractListItem } from "../../../core/domain/Contract";
+import type { Language } from "../../../core/domain/Settings";
 import type { InvoiceAttachmentFile, InvoiceListRow, InvoiceStatus } from "../../../core/domain/Invoice";
 import type { StoredDocumentRef } from "../../../core/domain/StoredDocumentRef";
 import { checkInvoiceAttachment } from "../../../core/usecases/invoice/attachInvoiceDocument";
@@ -17,6 +18,7 @@ import { FormDrawer } from "../../components/FormDrawer";
 import { useEntityForm } from "../../components/useEntityForm";
 import { dateToIso, isoToDate, parseDisplayDate } from "../../format/date";
 import { formatMoney, parseMoney } from "../../format/money";
+import { compareText } from "../../format/locale";
 import { formatVatPercent, parseVatPercent } from "../../format/vatPercent";
 import { AttachmentBlock } from "./AttachmentBlock";
 
@@ -34,8 +36,8 @@ interface Values {
 /** Attachment state of the open form; changes take effect on Save (UI-053). */
 type Attachment = { kind: "stored"; ref: StoredDocumentRef } | { kind: "chosen"; file: InvoiceAttachmentFile } | null;
 
-const byNumber = (a: ContractListItem, b: ContractListItem) =>
-  a.number.localeCompare(b.number, "en", { sensitivity: "base" });
+const byNumber = (language: Language) => (a: ContractListItem, b: ContractListItem) =>
+  compareText(a.number, b.number, language);
 
 /**
  * Create form (`invoice` null; optional fixed project), edit form (active) or read-only view with Restore
@@ -63,7 +65,7 @@ export function InvoiceForm({
     date: null,
     dueDate: null,
     value: "",
-    vatRate: formatVatPercent(settings.defaultVatRate),
+    vatRate: formatVatPercent(settings.defaultVatRate, settings.language),
     status: INVOICE_STATUS_DEFAULT,
     description: "",
   });
@@ -72,7 +74,7 @@ export function InvoiceForm({
   const [contracts, setContracts] = useState<ContractListItem[]>([]);
   const readOnly = invoice?.archivedAt != null;
   const editing = invoice !== null;
-  const money = (amount: number) => formatMoney(amount, settings.currency);
+  const money = (amount: number) => formatMoney(amount, settings.currency, settings.language);
 
   useEffect(() => {
     if (!opened) return;
@@ -85,7 +87,7 @@ export function InvoiceForm({
             date: isoToDate(invoice.date),
             dueDate: invoice.dueDate ? isoToDate(invoice.dueDate) : null,
             value: (invoice.value / 100).toFixed(2),
-            vatRate: formatVatPercent(invoice.vatRate),
+            vatRate: formatVatPercent(invoice.vatRate, settings.language),
             status: invoice.status,
             description: invoice.description ?? "",
           }
@@ -96,7 +98,7 @@ export function InvoiceForm({
     // All contracts (incl. archived) for the "Invoiced so far" line of the current contract; the picker shows only
     // active ones (UI-051), in a project tab only that project's.
     void useCases.listContracts({ includeArchived: true, projectId: presetProjectId }).then((result) => {
-      if (active && result.ok) setContracts([...result.value].sort(byNumber));
+      if (active && result.ok) setContracts([...result.value].sort(byNumber(settings.language)));
     });
     return () => {
       active = false;

@@ -1,6 +1,6 @@
-// Spec: AR-009, AR-011, AR-012, AR-010
+// Spec: AR-009, AR-011, AR-012, AR-010, DS-006
 // Builds the macOS app bundle, starts it with ARCHTRACKER_DATA_DIR set to a fresh temp dir and checks that the
-// SQLite DB is created and migration version 1 is recorded.
+// SQLite DB is created and migration versions 1, 2 are recorded.
 import { execFileSync, spawn } from "node:child_process";
 import { existsSync, mkdtempSync, readdirSync, rmSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -8,6 +8,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
+const EXPECTED_VERSIONS = "1\n2";
 const TIMEOUT_MS = 20_000;
 
 function log(message) {
@@ -26,7 +27,9 @@ function findBinary() {
 
 function migrationVersions(dbFile) {
   try {
-    return execFileSync("sqlite3", [dbFile, "SELECT version FROM schema_migrations"], { encoding: "utf8" }).trim();
+    return execFileSync("sqlite3", [dbFile, "SELECT version FROM schema_migrations ORDER BY version"], {
+      encoding: "utf8",
+    }).trim();
   } catch {
     return null;
   }
@@ -56,15 +59,19 @@ async function main() {
       if (exited) break;
       if (existsSync(dbFile)) {
         version = migrationVersions(dbFile);
-        if (version === "1") break;
+        if (version === EXPECTED_VERSIONS) break;
       }
       await sleep(500);
     }
     if (exited) throw new Error(`app exited early (code ${exited.code}, signal ${exited.signal})`);
     if (!existsSync(dbFile)) throw new Error(`tracker.db not created in ${dataDir} within ${TIMEOUT_MS / 1000} s`);
-    if (version !== "1") throw new Error(`schema_migrations versions = ${JSON.stringify(version)}, expected "1"`);
+    if (version !== EXPECTED_VERSIONS) {
+      throw new Error(
+        `schema_migrations versions = ${JSON.stringify(version)}, expected ${JSON.stringify(EXPECTED_VERSIONS)}`,
+      );
+    }
     if (child.exitCode !== null) throw new Error("app process is not alive");
-    log("app alive, tracker.db created, migration version 1 recorded");
+    log("app alive, tracker.db created, migration versions 1, 2 recorded");
   } finally {
     if (!exited) child.kill("SIGTERM");
     await sleep(500);

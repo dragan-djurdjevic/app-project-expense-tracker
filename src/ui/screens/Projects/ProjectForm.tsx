@@ -1,4 +1,4 @@
-// Spec: UI-031, UI-002, UI-002b, DM-030, BR-GEN-006, BR-GEN-007, BR-PRJ-001, UI-090
+// Spec: UI-031, UI-002, UI-002b, DM-030, BR-GEN-006, BR-GEN-007, BR-PRJ-001, UI-090, DM-060
 import { Select, TextInput } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { useEffect, useState } from "react";
@@ -9,6 +9,7 @@ import { PROJECT_STATUS_DEFAULT, PROJECT_STATUS_OPTIONS } from "../../../core/us
 import { FormDrawer } from "../../components/FormDrawer";
 import { useEntityForm } from "../../components/useEntityForm";
 import { dateToIso, isoToDate, parseDisplayDate } from "../../format/date";
+import { compareText } from "../../format/locale";
 import { parseMoney } from "../../format/money";
 
 interface Values {
@@ -39,7 +40,7 @@ export function ProjectForm({
   onDone: () => void;
 }) {
   const { t } = useTranslation();
-  const { useCases } = useApp();
+  const { useCases, settings } = useApp();
   const form = useEntityForm();
   const [values, setValues] = useState<Values>(EMPTY);
   const [investors, setInvestors] = useState<Option[]>([]);
@@ -68,12 +69,12 @@ export function ProjectForm({
       if (project && !options.some((option) => option.value === project.investorId)) {
         options.push({ value: project.investorId, label: project.investorName });
       }
-      setInvestors(options);
+      setInvestors(options.sort((a, b) => compareText(a.label, b.label, settings.language)));
     });
     return () => {
       active = false;
     };
-  }, [opened, project, useCases]);
+  }, [opened, project, useCases, settings.language]);
 
   const set = <K extends keyof Values>(key: K, value: Values[K]) =>
     setValues((current) => ({ ...current, [key]: value }));

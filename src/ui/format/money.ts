@@ -1,12 +1,17 @@
-// Spec: UI-002, DM-001, BR-GEN-001, BR-GEN-002
+// Spec: UI-002, DM-001, BR-GEN-001, BR-GEN-002, DM-060
 import type { DomainError } from "../../core/domain/DomainError";
 import type { Result } from "../../core/domain/Result";
+import type { Language } from "../../core/domain/Settings";
+import { formatLocale } from "./locale";
 
 const MONEY_MAX = 999_999_999_999;
 
-/** Formats minor units with `Intl.NumberFormat("en-GB", { style: "currency" })`, e.g. 123456 EUR → "€1,234.56". */
-export function formatMoney(minorUnits: number, currency: string): string {
-  return new Intl.NumberFormat("en-GB", { style: "currency", currency }).format(minorUnits / 100);
+/**
+ * Formats minor units with `Intl.NumberFormat(<locale>, { style: "currency" })` (UI-002), e.g. 123456 EUR →
+ * "€1,234.56" (en) / "1.234,56\u00a0€" (sr-Latn).
+ */
+export function formatMoney(minorUnits: number, currency: string, language: Language = "en"): string {
+  return new Intl.NumberFormat(formatLocale(language), { style: "currency", currency }).format(minorUnits / 100);
 }
 
 const invalid = (): Result<number> => ({

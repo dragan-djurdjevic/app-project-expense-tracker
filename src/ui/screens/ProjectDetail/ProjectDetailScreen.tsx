@@ -1,4 +1,4 @@
-// Spec: UI-032, UI-033, UI-040, UI-050, UI-002, UI-090, DM-030, AN-5
+// Spec: UI-032, UI-033, UI-040, UI-050, UI-002, UI-090, DM-030, AN-5, DM-060
 import { Badge, Group, Paper, SimpleGrid, Stack, Tabs, Text } from "@mantine/core";
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -63,7 +63,7 @@ export default function ProjectDetailScreen() {
   if (project === undefined) return null;
   if (project === null) return <Text c="dimmed">{t("errors.notFound")}</Text>;
 
-  const money = (value: number) => formatMoney(value, settings.currency);
+  const money = (value: number) => formatMoney(value, settings.currency, settings.language);
   const { summary } = project;
 
   return (
