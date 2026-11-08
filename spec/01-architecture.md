@@ -42,7 +42,7 @@ No change in `src/core/**` or `src/ui/**` is allowed for such a switch. Therefor
 | `SubcontractorRepository` | same shape as InvestorRepository |
 | `ProjectRepository` | same shape (without `existsByVat`) plus `availableYears()` (AN-000h, used by UI-030; `AnalyticsQuery` reuses it in M5); list filter supports `investorId`, `status`, `year` (AN-3 rule) |
 | `ContractRepository` | same shape plus `existsByNumber(projectId, number, excludeId?)` (case-insensitive as SQLite `COLLATE NOCASE`, i.e. ASCII letters only, matching `ux_contract_project_number`; includes archived contracts). `list(filter)` returns `ContractListItem` = Contract + `projectName`, `counterpartyName`, `invoiced`, `paid`. List filter supports `projectId`, `type`, `subcontractorId` |
-| `InvoiceRepository` | same shape; list filter supports `contractId`, `projectId`, `status` |
+| `InvoiceRepository` | same shape plus `existsByNumber(contractId, number, excludeId?)` (case-insensitive as SQLite `COLLATE NOCASE`, ASCII letters only, matching `ux_invoice_contract_number`; includes archived invoices). `list(filter)` returns `InvoiceListItem` = Invoice + `contractNumber`, `projectId`, `projectName`, `direction` (contract type), `vatAmount`, `gross`; sorted by date desc, number asc (case-insensitive), id. List filter supports `contractId`, `projectId`, `status` (array), `direction` |
 | `AnalyticsQuery` | `contractedVsCollected(year, mode)`, `subcontractorPayments(year, mode)`, `projectsInYear(year)`, `netPerProject(year, mode)`, `budgetRealisation(statuses)`, `availableYears()` |
 | `SettingsRepository` | `get(): Promise<Settings>`, `update(settings): Promise<void>` (DM-060) |
 | `DocumentStorage` | `save(bytes, originalName, ownerId): Promise<StoredDocumentRef>` (stores as `<ownerId>/<uuid>.pdf`, uuid from `IdGenerator`; `ownerId` = invoice id, DS-004), `open(ref)`, `remove(ref)`, `exists(ref)`. `InMemoryDocumentStorage.open` is a no-op in browser mode. |
@@ -69,6 +69,9 @@ One file per use case in `src/core/usecases/<entity>/`, e.g. `createProject.ts`.
 
 `DomainError` = `{ code: string /* e.g. "BR-PRJ-003" */, field?: string, messageKey: string }`.
 The UI translates `messageKey` via i18n.
+
+Exception — warnings: `createInvoice` / `updateInvoice` return `{ ok: true, value: Invoice, warnings: InvoiceWarning[] }`
+on success, where `InvoiceWarning = "overInvoiced"` (BR-IVC-008) and `warnings` is `[]` when there is none.
 
 ## AR-006 Tech stack (major versions pinned; exact versions locked by committed `yarn.lock` / `Cargo.lock`)
 | Concern | Choice |

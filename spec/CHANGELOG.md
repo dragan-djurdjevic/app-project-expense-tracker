@@ -9,6 +9,20 @@ Every spec change gets an entry here **in the same commit** as the spec edit. Fo
 Bump rules: PATCH = wording/clarification with no behaviour change; MINOR = new or changed behaviour;
 MAJOR = reserved for post-POC breaking changes.
 
+## 0.3.6 — 2026-11-08
+- CHANGED BR-IVC-005, DM-050: same-status change is a no-op success; statuses allowed on create; update/changeStatus
+  check transitions from the stored status; error field.
+- CHANGED BR-IVC-006: 20 MB = 20 971 520 bytes; PDF check before size check; error field `attachment`.
+- CHANGED BR-IVC-001…004: error fields; BR-IVC-003 case-insensitivity as `COLLATE NOCASE`.
+- CHANGED BR-IVC-008, AR-005: `createInvoice`/`updateInvoice` return `warnings: ["overInvoiced"]` on success.
+- CHANGED AR-004: `InvoiceRepository.existsByNumber`, `InvoiceListItem`, list sort and `direction` filter.
+- CHANGED DM-050: archived invoices reject changeStatus/attach/remove (BR-GEN-007); overdue uses the `Clock` date.
+- CHANGED UI-032: summary cards include archived records; Invoices tab behaviour.
+- CHANGED UI-050: sort tie-break, headers, filter options, VAT % format, status labels, `icon-attachment`.
+- CHANGED UI-051…053: contract picker, status options, `field-vatAmount`/`field-gross`, `info-invoiced`,
+  `error-attachment`, `confirm-remove-attachment`, labels, titles, texts.
+- CHANGED M4: TC-M4-007, TC-M4-009, TC-M4-021 expectations; `basic` fixture invoice rows.
+
 ## 0.3.5 — 2026-11-08
 - CHANGED AR-005: explicit validation order (field rules → reference rules → uniqueness; on update BR-GEN-007 and
   immutability first).
