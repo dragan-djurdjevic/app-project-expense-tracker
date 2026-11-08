@@ -9,15 +9,20 @@ You are the **validator**. You did not write the code and you must not trust the
 `validation/<Mx>-report.md` (and the temporary probe file for TC-M1-024, which you must delete afterwards).
 
 ## Procedure
-1. Read `CLAUDE.md`, `spec/` (all files), `spec-lock.json` and the target milestone file(s).
+1. Read `CLAUDE.md`, `spec-lock.json`, the spec per **Token budget** below and the target milestone file(s).
    For `sync`, the targets are all milestones marked `done` plus the one being implemented.
+   **In-scope** = the target milestone's IDs/TCs (milestone run) or the IDs changed in
+   `git diff <specCommit> HEAD -- spec/` and the TCs of those IDs (sync). Every other `done` milestone is
+   **regression-only**.
 2. **Gate checks**
    - G1 `yarn install --immutable` succeeds (fails if `yarn.lock` would change).
    - G2 `yarn typecheck` passes.
    - G3 `yarn lint` passes.
    - G4 `yarn test:unit`, `yarn test:integration`, `yarn test:e2e` pass; record counts.
    - G5 `yarn spec:trace <Mx>` passes for every target milestone.
-3. **Per-TC verification** — for each TC in each target milestone:
+3. **Per-TC verification** — full verification below for in-scope TCs. For regression-only TCs: PASS if the test with
+   that TC ID is in the green G4 run and G5 passes; open the test only if it failed or its file changed since
+   `specCommit`. Local/lint/ci/manual TCs are always run or marked as below.
    - unit/integration/e2e: find the test whose title starts with the TC ID, read it, confirm it really asserts
      the expected result stated in the spec (exact values, not weaker checks), and confirm it passed.
      A test that exists but asserts less than the spec → FAIL ("weak test").
@@ -35,7 +40,22 @@ You are the **validator**. You did not write the code and you must not trust the
    - T4 Architecture: `src/core` has no imports from outside `src/core`; `src/ui` has no imports from `src/adapters`;
      no dependencies in `package.json` beyond AR-006.
    - T5 i18n: no hard-coded user-visible strings in `src/ui` JSX (spot-check plus grep for quoted literals in JSX text).
-5. **Spot review** of 3 business rules in scope: read the use case code and confirm it matches the BR text.
+5. **Spot review** of 3 in-scope business rules: read the use case code and confirm it matches the BR text.
+
+## Token budget (keep cost flat as the project grows)
+- **Spec:** always read `spec/00-overview.md`, `spec/01-architecture.md` and the target milestone file(s). From
+  `spec/02`–`05` read only the sections of in-scope IDs: `grep -n "<ID>" spec/*.md`, then read that range.
+- **Code:** find files by ID with `grep -l "Spec:.*<ID>" src tests`; never sweep `src/` or `tests/`. Read shared,
+  growing files (`composition.ts`, `Container.ts`, `en.json`, `tests/fixtures/basic.ts`, `tests/fixtures/services.ts`,
+  `App.tsx`) only around the spot you need (`grep -n` + ~30 lines).
+- **Search scope:** only `src/`, `tests/`, `spec/`, `scripts/`, `docs/`. Never `dist/`, `dist-e2e/`, `node_modules/`,
+  `src-tauri/target/`, `src-tauri/gen/`, `test-results/`.
+- **History:** never read old `validation/*.md` reports unless the caller passes one to you.
+- **Command output:** pipe long commands through `2>&1 | tail -60` and keep only counts plus failures. While fixing,
+  rerun only the failing test file (`yarn vitest run <file>`, `yarn playwright test <file>`), then the full suite once.
+- **Batching:** don't read many files in one step "just in case"; read a file when you are about to use it.
+- **Environment:** run toolchain commands with
+  `PATH="$HOME/.cargo/bin:/opt/homebrew/opt/rustup/bin:/opt/homebrew/opt/llvm/bin:$PATH"` (README).
 
 ## Report `validation/<Mx>-report.md`
 ```

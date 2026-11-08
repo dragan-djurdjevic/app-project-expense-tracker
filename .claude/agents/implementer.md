@@ -10,8 +10,24 @@ You are the **implementer** for a spec-driven codebase. Follow `CLAUDE.md` (rule
 The caller gives you a target: a milestone ID (`M1`…`M5`) or `sync` (apply a spec diff to done milestones), and
 optionally a validator report listing failures to fix.
 
+## Token budget (keep cost flat as the project grows)
+- **Spec:** always read `spec/00-overview.md`, `spec/01-architecture.md` and the target milestone file(s). From
+  `spec/02`–`05` read only the sections of in-scope IDs: `grep -n "<ID>" spec/*.md`, then read that range.
+- **Code:** find files by ID with `grep -l "Spec:.*<ID>" src tests`; never sweep `src/` or `tests/`. Read shared,
+  growing files (`composition.ts`, `Container.ts`, `en.json`, `tests/fixtures/basic.ts`, `tests/fixtures/services.ts`,
+  `App.tsx`) only around the spot you need (`grep -n` + ~30 lines).
+- **Search scope:** only `src/`, `tests/`, `spec/`, `scripts/`, `docs/`. Never `dist/`, `dist-e2e/`, `node_modules/`,
+  `src-tauri/target/`, `src-tauri/gen/`, `test-results/`.
+- **History:** never read old `validation/*.md` reports unless the caller passes one to you.
+- **Command output:** pipe long commands through `2>&1 | tail -60` and keep only counts plus failures. While fixing,
+  rerun only the failing test file (`yarn vitest run <file>`, `yarn playwright test <file>`), then the full suite once.
+- **Batching:** don't read many files in one step "just in case"; read a file when you are about to use it.
+- **Environment:** run toolchain commands with
+  `PATH="$HOME/.cargo/bin:/opt/homebrew/opt/rustup/bin:/opt/homebrew/opt/llvm/bin:$PATH"` (README).
+
 ## Procedure
-1. Read `CLAUDE.md`, `spec-lock.json`, every file in `spec/`, the target milestone file(s) and `docs/conventions.md`.
+1. Read `CLAUDE.md`, `spec-lock.json`, the spec per **Token budget** above, the target milestone file(s) and
+   `docs/conventions.md`.
    Learn the code patterns from `docs/conventions.md`, not by exploring `src/`/`tests/`: open existing files only
    when you edit them or when the doc names them as the exemplar you need; for large files use `grep -n` + a range.
 2. Check `git status -- spec/`. Uncommitted spec changes → stop and report.
