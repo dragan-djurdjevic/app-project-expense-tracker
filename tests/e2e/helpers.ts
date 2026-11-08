@@ -1,4 +1,4 @@
-// Spec: AR-009, UI-001, UI-002a
+// Spec: AR-009, UI-001, UI-002a, UI-060
 import { expect, type Locator, type Page } from "@playwright/test";
 
 /**
@@ -58,4 +58,10 @@ export async function toggleArchived(page: Page): Promise<void> {
 
 export function drawer(page: Page, title: string): Locator {
   return page.getByRole("dialog", { name: title });
+}
+
+/** Clicks a Mantine Switch identified by its `data-testid` (e.g. `toggle-gross`). */
+export async function toggleSwitch(page: Page, testId: string): Promise<void> {
+  const id = await page.getByTestId(testId).getAttribute("id");
+  await page.locator(`label[for="${id}"]`).first().click();
 }

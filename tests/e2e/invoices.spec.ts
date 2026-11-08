@@ -172,7 +172,9 @@ test("TC-M4-027 project detail Invoices tab and summary cards reflect seeded inv
   const main = page.getByRole("main");
   // Summary cards (the Invoices table also has a "Net" header).
   const card = (label: string) =>
-    main.locator(".mantine-Paper-root").filter({ has: page.getByText(label, { exact: true }) });
+    main
+      .locator('.mantine-Paper-root:not([data-testid="card-realisation"])')
+      .filter({ has: page.getByText(label, { exact: true }) });
   await expect(card("Collected")).toContainText("€40,000.00");
   await expect(card("Paid to subcontractors")).toContainText("€15,000.00");
   await expect(card("Net")).toContainText("€25,000.00");

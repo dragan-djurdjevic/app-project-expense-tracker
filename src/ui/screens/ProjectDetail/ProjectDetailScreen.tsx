@@ -1,14 +1,16 @@
-// Spec: UI-032, UI-040, UI-050, UI-002, UI-090, DM-030
+// Spec: UI-032, UI-033, UI-040, UI-050, UI-002, UI-090, DM-030, AN-5
 import { Badge, Group, Paper, SimpleGrid, Stack, Tabs, Text } from "@mantine/core";
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { useApp } from "../../../app/AppProvider";
+import type { BudgetRealisationReportRow } from "../../../core/domain/Analytics";
 import type { ProjectDetails } from "../../../core/domain/Project";
 import { ScreenTitle } from "../../components/ScreenTitle";
 import { ProjectStatusBadge } from "../../components/StatusBadge";
 import { formatDate } from "../../format/date";
 import { formatMoney } from "../../format/money";
+import { RealisationBar } from "../../components/RealisationBar";
 import { ContractList } from "../Contracts/ContractList";
 import { InvoiceList } from "../Invoices/InvoiceList";
 
@@ -43,11 +45,15 @@ export default function ProjectDetailScreen() {
   const { useCases, settings } = useApp();
   const [project, setProject] = useState<ProjectDetails | null | undefined>(undefined);
   const [refresh, setRefresh] = useState(0);
+  const [realisation, setRealisation] = useState<BudgetRealisationReportRow | null>(null);
 
   useEffect(() => {
     let active = true;
     void useCases.getProject(id).then((result) => {
       if (active && result.ok) setProject(result.value);
+    });
+    void useCases.getBudgetRealisation().then((result) => {
+      if (active && result.ok) setRealisation(result.value.rows.find((row) => row.projectId === id) ?? null);
     });
     return () => {
       active = false;
@@ -85,6 +91,25 @@ export default function ProjectDetailScreen() {
         <Card label={t("entity.project.summary.paidOut")} value={money(summary.paidOut)} />
         <Card label={t("entity.project.summary.net")} value={money(summary.net)} />
       </SimpleGrid>
+      {realisation && realisation.budget !== null && (
+        <Paper withBorder p="md" radius="md" mb="lg" data-testid="card-realisation">
+          <Text fw={700} mb="sm">
+            {t("nav.analyticsBudget")}
+          </Text>
+          <Group gap="xl">
+            <Field label={t("analytics.budget")}>{money(realisation.budget)}</Field>
+            <Field label={t("analytics.collected")}>{money(realisation.collected)}</Field>
+            <Field label={t("analytics.realisationPercentOfBudget")}>
+              <RealisationBar value={realisation.realisationPercentOfBudget} testId="bar-realisation" />
+            </Field>
+            <Field label={t("analytics.remaining")}>
+              <Text c={(realisation.remaining ?? 0) < 0 ? "red" : undefined} span inherit>
+                {money(realisation.remaining ?? 0)}
+              </Text>
+            </Field>
+          </Group>
+        </Paper>
+      )}
       <Tabs defaultValue="contracts" keepMounted={false}>
         <Tabs.List>
           <Tabs.Tab value="contracts">{t("nav.contracts")}</Tabs.Tab>
