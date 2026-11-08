@@ -1,4 +1,10 @@
-// Spec: AR-001, AR-005, AR-009, UI-080, UI-010, UI-020, UI-030, UI-032
+// Spec: AR-001, AR-005, AR-009, UI-080, UI-010, UI-020, UI-030, UI-032, UI-040, UI-041
+import type { ArchiveContract } from "../core/usecases/contract/archiveContract";
+import type { CreateContract } from "../core/usecases/contract/createContract";
+import type { GetContract } from "../core/usecases/contract/getContract";
+import type { ListContracts } from "../core/usecases/contract/listContracts";
+import type { RestoreContract } from "../core/usecases/contract/restoreContract";
+import type { UpdateContract } from "../core/usecases/contract/updateContract";
 import type { ArchiveInvestor } from "../core/usecases/investor/archiveInvestor";
 import type { CreateInvestor } from "../core/usecases/investor/createInvestor";
 import type { GetInvestor } from "../core/usecases/investor/getInvestor";
@@ -43,6 +49,12 @@ export interface UseCases {
   archiveProject: ArchiveProject;
   restoreProject: RestoreProject;
   getAvailableYears: GetAvailableYears;
+  listContracts: ListContracts;
+  getContract: GetContract;
+  createContract: CreateContract;
+  updateContract: UpdateContract;
+  archiveContract: ArchiveContract;
+  restoreContract: RestoreContract;
 }
 
 export type RuntimeMode = "tauri" | "browser";

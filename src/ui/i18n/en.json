@@ -25,7 +25,9 @@
     "confirmArchive": {
       "title": "Archive record",
       "message": "Archive “{{name}}”? It is hidden from lists but kept for history and can be restored."
-    }
+    },
+    "all": "All",
+    "allProjects": "All projects"
   },
   "nav": {
     "projects": "Projects",
@@ -81,6 +83,26 @@
         "paidOut": "Paid to subcontractors",
         "net": "Net"
       }
+    },
+    "contract": {
+      "singular": "Contract",
+      "new": "New Contract",
+      "edit": "Edit Contract",
+      "number": "Number",
+      "type": "Type",
+      "project": "Project",
+      "counterparty": "Counter-party",
+      "subcontractor": "Subcontractor",
+      "investor": "Investor",
+      "date": "Date",
+      "value": "Value (net)",
+      "invoiced": "Invoiced",
+      "paid": "Paid",
+      "description": "Description",
+      "typeBadge": {
+        "INCOMING": "In",
+        "OUTGOING": "Out"
+      }
     }
   },
   "enum": {
@@ -90,6 +112,10 @@
       "ON_HOLD": "On hold",
       "DONE": "Done",
       "CANCELLED": "Cancelled"
+    },
+    "contractType": {
+      "INCOMING": "Incoming",
+      "OUTGOING": "Outgoing"
     }
   },
   "settings": {
@@ -112,6 +138,12 @@
     },
     "parentArchived": "The selected record is archived.",
     "archivedReadOnly": "Archived records are read-only. Restore the record to edit it.",
-    "notFound": "Record not found."
+    "notFound": "Record not found.",
+    "contract": {
+      "subcontractorRequired": "A subcontractor is required for outgoing contracts.",
+      "subcontractorForbidden": "Incoming contracts cannot have a subcontractor.",
+      "numberDuplicate": "This contract number is already used in this project."
+    },
+    "immutable": "This field cannot be changed after creation."
   }
 }

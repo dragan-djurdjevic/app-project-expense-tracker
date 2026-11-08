@@ -1,7 +1,14 @@
-// Spec: AR-004, AR-005
+// Spec: AR-004, AR-005, DM-040
+import { SqliteContractRepository } from "../../src/adapters/sqlite/SqliteContractRepository";
 import { SqliteInvestorRepository } from "../../src/adapters/sqlite/SqliteInvestorRepository";
 import { SqliteProjectRepository } from "../../src/adapters/sqlite/SqliteProjectRepository";
 import { SqliteSubcontractorRepository } from "../../src/adapters/sqlite/SqliteSubcontractorRepository";
+import { makeArchiveContract } from "../../src/core/usecases/contract/archiveContract";
+import { makeCreateContract } from "../../src/core/usecases/contract/createContract";
+import { makeGetContract } from "../../src/core/usecases/contract/getContract";
+import { makeListContracts } from "../../src/core/usecases/contract/listContracts";
+import { makeRestoreContract } from "../../src/core/usecases/contract/restoreContract";
+import { makeUpdateContract } from "../../src/core/usecases/contract/updateContract";
 import { makeArchiveInvestor } from "../../src/core/usecases/investor/archiveInvestor";
 import { makeCreateInvestor } from "../../src/core/usecases/investor/createInvestor";
 import { makeGetInvestor } from "../../src/core/usecases/investor/getInvestor";
@@ -25,7 +32,7 @@ import { controlledClock } from "./controlledClock";
 import { migratedDb } from "./db";
 import { sequentialIds } from "./fixedClock";
 
-/** Real SQLite repositories on a fresh in-memory DB, wired to the M2 use cases like `composition.ts`. */
+/** Real SQLite repositories on a fresh in-memory DB, wired to the M2/M3 use cases like `composition.ts`. */
 export async function setupServices() {
   const db = await migratedDb();
   const clock = controlledClock("2026-01-01T00:00:00.000Z");
@@ -33,12 +40,14 @@ export async function setupServices() {
   const investorRepo = new SqliteInvestorRepository(db, clock);
   const subcontractorRepo = new SqliteSubcontractorRepository(db, clock);
   const projectRepo = new SqliteProjectRepository(db, clock);
+  const contractRepo = new SqliteContractRepository(db, clock);
   return {
     db,
     clock,
     investorRepo,
     subcontractorRepo,
     projectRepo,
+    contractRepo,
     listInvestors: makeListInvestors({ investorRepo, projectRepo }),
     getInvestor: makeGetInvestor({ investorRepo }),
     createInvestor: makeCreateInvestor({ investorRepo, clock, ids }),
@@ -52,12 +61,18 @@ export async function setupServices() {
     archiveSubcontractor: makeArchiveSubcontractor({ subcontractorRepo }),
     restoreSubcontractor: makeRestoreSubcontractor({ subcontractorRepo }),
     listProjects: makeListProjects({ projectRepo, investorRepo }),
-    getProject: makeGetProject({ projectRepo, investorRepo }),
+    getProject: makeGetProject({ projectRepo, investorRepo, contractRepo }),
     createProject: makeCreateProject({ projectRepo, investorRepo, clock, ids }),
     updateProject: makeUpdateProject({ projectRepo, investorRepo, clock }),
     archiveProject: makeArchiveProject({ projectRepo }),
     restoreProject: makeRestoreProject({ projectRepo }),
     getAvailableYears: makeGetAvailableYears({ projectRepo, clock }),
+    listContracts: makeListContracts({ contractRepo }),
+    getContract: makeGetContract({ contractRepo }),
+    createContract: makeCreateContract({ contractRepo, projectRepo, subcontractorRepo, clock, ids }),
+    updateContract: makeUpdateContract({ contractRepo, subcontractorRepo, clock }),
+    archiveContract: makeArchiveContract({ contractRepo }),
+    restoreContract: makeRestoreContract({ contractRepo }),
   };
 }
 

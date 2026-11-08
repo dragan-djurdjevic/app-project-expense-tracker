@@ -1,9 +1,9 @@
-// Spec: UI-002a
+// Spec: UI-002a, UI-032
 import { Button, Group, Switch, TextInput } from "@mantine/core";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
-/** Search box, extra filters, "Show archived" toggle and "New" button above a list. */
+/** Search box, extra filters, "Show archived" toggle and "New" button (hidden when `onNew` is absent) above a list. */
 export function ListToolbar({
   search,
   onSearch,
@@ -16,7 +16,7 @@ export function ListToolbar({
   onSearch: (value: string) => void;
   showArchived: boolean;
   onShowArchived: (value: boolean) => void;
-  onNew: () => void;
+  onNew?: () => void;
   children?: ReactNode;
 }) {
   const { t } = useTranslation();
@@ -37,9 +37,11 @@ export function ListToolbar({
         data-testid="toggle-archived"
         mb={8}
       />
-      <Button ml="auto" onClick={onNew} data-testid="btn-new">
-        {t("common.new")}
-      </Button>
+      {onNew && (
+        <Button ml="auto" onClick={onNew} data-testid="btn-new">
+          {t("common.new")}
+        </Button>
+      )}
     </Group>
   );
 }

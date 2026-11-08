@@ -1,8 +1,9 @@
-// Spec: AR-001, AR-002, AR-003, AR-005, AR-009, AR-010, DS-001, DS-004, UI-010, UI-020, UI-030, UI-032
+// Spec: AR-001, AR-002, AR-003, AR-005, AR-009, AR-010, DS-001, DS-004, UI-010, UI-020, UI-030, UI-032, UI-040, UI-041
 import wasmUrl from "sql.js/dist/sql-wasm.wasm?url";
 import { bundledMigrations } from "../adapters/sqlite/bundledMigrations";
 import { ensureSettingsRow, runMigrations } from "../adapters/sqlite/runMigrations";
 import type { SqlDriver } from "../adapters/sqlite/SqlDriver";
+import { SqliteContractRepository } from "../adapters/sqlite/SqliteContractRepository";
 import { SqliteInvestorRepository } from "../adapters/sqlite/SqliteInvestorRepository";
 import { SqliteProjectRepository } from "../adapters/sqlite/SqliteProjectRepository";
 import { SqliteSettingsRepository } from "../adapters/sqlite/SqliteSettingsRepository";
@@ -15,6 +16,12 @@ import { UuidIdGenerator } from "../adapters/system/UuidIdGenerator";
 import { getDataDir, isTauriRuntime, joinPath, openInOs } from "../adapters/tauri/platform";
 import { TauriSqlDriver } from "../adapters/tauri/TauriSqlDriver";
 import type { DocumentStorage } from "../core/ports/DocumentStorage";
+import { makeArchiveContract } from "../core/usecases/contract/archiveContract";
+import { makeCreateContract } from "../core/usecases/contract/createContract";
+import { makeGetContract } from "../core/usecases/contract/getContract";
+import { makeListContracts } from "../core/usecases/contract/listContracts";
+import { makeRestoreContract } from "../core/usecases/contract/restoreContract";
+import { makeUpdateContract } from "../core/usecases/contract/updateContract";
 import { makeArchiveInvestor } from "../core/usecases/investor/archiveInvestor";
 import { makeCreateInvestor } from "../core/usecases/investor/createInvestor";
 import { makeGetInvestor } from "../core/usecases/investor/getInvestor";
@@ -84,6 +91,7 @@ export async function createContainer(): Promise<Container> {
   const investorRepo = new SqliteInvestorRepository(db, clock);
   const subcontractorRepo = new SqliteSubcontractorRepository(db, clock);
   const projectRepo = new SqliteProjectRepository(db, clock);
+  const contractRepo = new SqliteContractRepository(db, clock);
 
   if (inMemoryDocuments && import.meta.env.MODE === "e2e") {
     window.__TEST__ = makeTestHooks(db, inMemoryDocuments, (await import("./e2eFixtures")).e2eFixtures);
@@ -106,12 +114,18 @@ export async function createContainer(): Promise<Container> {
       archiveSubcontractor: makeArchiveSubcontractor({ subcontractorRepo }),
       restoreSubcontractor: makeRestoreSubcontractor({ subcontractorRepo }),
       listProjects: makeListProjects({ projectRepo, investorRepo }),
-      getProject: makeGetProject({ projectRepo, investorRepo }),
+      getProject: makeGetProject({ projectRepo, investorRepo, contractRepo }),
       createProject: makeCreateProject({ projectRepo, investorRepo, clock, ids }),
       updateProject: makeUpdateProject({ projectRepo, investorRepo, clock }),
       archiveProject: makeArchiveProject({ projectRepo }),
       restoreProject: makeRestoreProject({ projectRepo }),
       getAvailableYears: makeGetAvailableYears({ projectRepo, clock }),
+      listContracts: makeListContracts({ contractRepo }),
+      getContract: makeGetContract({ contractRepo }),
+      createContract: makeCreateContract({ contractRepo, projectRepo, subcontractorRepo, clock, ids }),
+      updateContract: makeUpdateContract({ contractRepo, subcontractorRepo, clock }),
+      archiveContract: makeArchiveContract({ contractRepo }),
+      restoreContract: makeRestoreContract({ contractRepo }),
     },
     runtime,
   };
