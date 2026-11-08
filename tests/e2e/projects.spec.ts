@@ -111,6 +111,7 @@ test("TC-M2-036 project detail page shows header data and summary cards with zer
   // Contracts tab (default, M3): Office Tower has no contracts.
   await expect(main.getByRole("tab", { name: "Contracts" })).toHaveAttribute("aria-selected", "true");
   await expect(main).toContainText("No records yet.");
+  // Invoices tab (M4): Office Tower has no invoices.
   await main.getByRole("tab", { name: "Invoices" }).click();
-  await expect(main).toContainText("Coming in M4");
+  await expect(main).toContainText("No records yet.");
 });

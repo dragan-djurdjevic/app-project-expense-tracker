@@ -1,4 +1,4 @@
-// Spec: UI-032, UI-040, UI-002, UI-090, DM-030
+// Spec: UI-032, UI-040, UI-050, UI-002, UI-090, DM-030
 import { Badge, Group, Paper, SimpleGrid, Stack, Tabs, Text } from "@mantine/core";
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -10,6 +10,7 @@ import { ProjectStatusBadge } from "../../components/StatusBadge";
 import { formatDate } from "../../format/date";
 import { formatMoney } from "../../format/money";
 import { ContractList } from "../Contracts/ContractList";
+import { InvoiceList } from "../Invoices/InvoiceList";
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -84,7 +85,7 @@ export default function ProjectDetailScreen() {
         <Card label={t("entity.project.summary.paidOut")} value={money(summary.paidOut)} />
         <Card label={t("entity.project.summary.net")} value={money(summary.net)} />
       </SimpleGrid>
-      <Tabs defaultValue="contracts">
+      <Tabs defaultValue="contracts" keepMounted={false}>
         <Tabs.List>
           <Tabs.Tab value="contracts">{t("nav.contracts")}</Tabs.Tab>
           <Tabs.Tab value="invoices">{t("nav.invoices")}</Tabs.Tab>
@@ -97,7 +98,7 @@ export default function ProjectDetailScreen() {
           />
         </Tabs.Panel>
         <Tabs.Panel value="invoices" pt="md">
-          <Text c="dimmed">{t("common.comingIn", { milestone: "M4" })}</Text>
+          <InvoiceList projectId={project.id} onChanged={() => setRefresh((n) => n + 1)} />
         </Tabs.Panel>
       </Tabs>
     </>

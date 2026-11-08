@@ -76,7 +76,7 @@ The counter-party of an INCOMING contract is always `project.investorId` — it 
 | vatRate / vat_rate | VatRate | ✔ | default = settings.default_vat_rate |
 | date / date | DateOnly | ✔ | issue date; determines year for "collected"/"paid" in analytics |
 | dueDate / due_date | DateOnly | | must be ≥ date (BR-IVC-004) |
-| status / status | InvoiceStatus | ✔ | default `DRAFT`; BR-IVC-005 |
+| status / status | InvoiceStatus | ✔ | default `DRAFT`; on create may be `DRAFT`, `ISSUED` or `CANCELLED` (reachable from DRAFT); BR-IVC-005 |
 | description / description | string ≤1000 | | |
 | attachment / attachment_path, attachment_name | StoredDocumentRef or null | | PDF only, ≤ 20 MB (BR-IVC-006) |
 
@@ -84,6 +84,17 @@ Derived (never stored): `vatAmount = round_half_up(value × vatRate / 10000)`, `
 
 **InvoiceStatus** enum: `DRAFT`, `ISSUED`, `PAID`, `CANCELLED`.
 Direction of an invoice = type of its contract (INCOMING invoice → money in; OUTGOING → money out).
+
+Archived invoices (BR-GEN-007): `changeStatus`, `attachDocument` and `removeDocument` on an archived invoice return
+BR-GEN-007; `openDocument` is allowed. "Overdue" (UI-050) compares `dueDate` with the local calendar date of `Clock.now()`.
+
+Invoice input defaults: on create, an omitted or null `vatRate` = settings.defaultVatRate and an omitted `status` =
+DRAFT; on `update`, an omitted or null `vatRate` / omitted `status` keeps the stored value. `contractId` is not
+re-checked on `update` (it is immutable, BR-IVC-002): per BR-GEN-006 an invoice stays editable after its contract
+or project is archived.
+
+Document operations: `removeDocument` on an invoice without an attachment is a no-op success; `openDocument` on an
+invoice without an attachment is a programming error (throws, AR-005).
 
 **StoredDocumentRef** = `{ path: string /* relative to storage root */, originalName: string }`.
 
@@ -114,11 +125,11 @@ Settings are editable on the Settings screen (UI-080). Changing currency only ch
 | BR-CON-003 | `INCOMING` ⇒ `subcontractorId` must be null. Field `subcontractorId`. | `errors.contract.subcontractorForbidden` |
 | BR-CON-004 | `number` unique within the same project (incl. archived contracts), case-insensitive (ASCII, as `COLLATE NOCASE`, AR-004). Field `number`. | `errors.contract.numberDuplicate` |
 | BR-CON-005 | `type` and `projectId` cannot change after create. Update input has the same shape as create; field = the first changed one in order `type`, `projectId`. | `errors.immutable` |
-| BR-IVC-001 | `contractId` must reference an existing contract (active, per BR-GEN-006) | `errors.parentArchived` / `errors.notFound` |
-| BR-IVC-002 | `contractId` cannot change after create | `errors.immutable` |
-| BR-IVC-003 | `number` unique within the same contract (incl. archived), case-insensitive | `errors.invoice.numberDuplicate` |
-| BR-IVC-004 | `dueDate`, if set, ≥ `date` | `errors.invoice.dueBeforeDate` |
-| BR-IVC-005 | Status transitions allowed: DRAFT→ISSUED, DRAFT→CANCELLED, ISSUED→PAID, ISSUED→CANCELLED, ISSUED→DRAFT, PAID→ISSUED (undo). CANCELLED is final. Same-status "transition" is a no-op. | `errors.invoice.statusTransition` |
-| BR-IVC-006 | Attachment must be a PDF (file starts with `%PDF-` bytes **and** extension `.pdf`, case-insensitive) and ≤ 20 MB | `errors.attachment.notPdf` / `errors.attachment.tooLarge` |
+| BR-IVC-001 | `contractId` must reference an existing contract (active, per BR-GEN-006). Field `contractId`. | `errors.parentArchived` / `errors.notFound` |
+| BR-IVC-002 | `contractId` cannot change after create. Field `contractId`. | `errors.immutable` |
+| BR-IVC-003 | `number` unique within the same contract (incl. archived), case-insensitive (ASCII, as `COLLATE NOCASE`, AR-004). Field `number`. | `errors.invoice.numberDuplicate` |
+| BR-IVC-004 | `dueDate`, if set, ≥ `date`. Field `dueDate`. | `errors.invoice.dueBeforeDate` |
+| BR-IVC-005 | Status transitions allowed: DRAFT→ISSUED, DRAFT→CANCELLED, ISSUED→PAID, ISSUED→CANCELLED, ISSUED→DRAFT, PAID→ISSUED (undo). CANCELLED is final. Same-status "transition" (incl. CANCELLED→CANCELLED) is a no-op success (record and `updatedAt` unchanged). On create, `status` defaults to DRAFT and may be DRAFT, ISSUED or CANCELLED; anything else fails. On `update` and `changeStatus(id, status)`, a changed status must be an allowed transition from the stored status. Error `{code:"BR-IVC-005", field:"status"}`. | `errors.invoice.statusTransition` |
+| BR-IVC-006 | Attachment must be a PDF (file starts with `%PDF-` bytes **and** extension `.pdf`, case-insensitive) and ≤ 20 MB (20 × 1024 × 1024 = 20 971 520 bytes). Checked in order: PDF (extension and magic bytes) → `notPdf`, then size → `tooLarge`. Error `{code:"BR-IVC-006", field:"attachment"}`. | `errors.attachment.notPdf` / `errors.attachment.tooLarge` |
 | BR-IVC-007 | Replacing an attachment removes the previous stored file; removing an attachment deletes the stored file and clears the fields. Archiving an invoice keeps its file. | — |
-| BR-IVC-008 | Sum of non-cancelled invoice values (archived invoices included) on a contract **may** exceed the contract value; the UI shows a warning (UI-052), not an error. | — |
+| BR-IVC-008 | Sum of non-cancelled invoice values (archived invoices included) on a contract **may** exceed the contract value; the UI shows a warning (UI-052), not an error. `createInvoice`/`updateInvoice` then return the warning `"overInvoiced"` (AR-005): set when, after the save, Σ values of non-cancelled invoices on the contract (archived invoices and this invoice included) > contract value. | — |

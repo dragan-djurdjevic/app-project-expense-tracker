@@ -1,4 +1,4 @@
-// Spec: UI-001, UI-010, UI-020, UI-030, UI-040
+// Spec: UI-001, UI-010, UI-020, UI-030, UI-040, UI-050
 export interface NavItem {
   /** i18n key of the sidebar label and screen title. */
   labelKey: string;
@@ -19,7 +19,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
     placeholderMilestone: null,
     section: "main",
   },
-  { labelKey: "nav.invoices", route: "/invoices", testId: "nav-invoices", placeholderMilestone: "M4", section: "main" },
+  { labelKey: "nav.invoices", route: "/invoices", testId: "nav-invoices", placeholderMilestone: null, section: "main" },
   {
     labelKey: "nav.investors",
     route: "/investors",

@@ -1,5 +1,6 @@
-// Spec: AR-009, DM-010, DM-020, DM-030, DM-040
+// Spec: AR-009, DM-010, DM-020, DM-030, DM-040, DM-050, DS-004
 import type { SqlDriver } from "../../src/adapters/sqlite/SqlDriver";
+import type { DocumentStorage } from "../../src/core/ports/DocumentStorage";
 
 const TS = "2026-01-01T00:00:00.000Z";
 
@@ -26,13 +27,29 @@ export const BASIC = {
     schoolIn: "40000000-0000-4000-8000-000000000003",
     schoolOut: "40000000-0000-4000-8000-000000000004",
   },
+  /** Villa Lake only (Office Tower has none, keeps TC-M2-036 valid); all dates in 2025 (keeps TC-M2-034 valid). */
+  invoices: {
+    /** INV-001 on V-001, PAID, with attachment `sample.pdf`. */
+    inv001: "50000000-0000-4000-8000-000000000001",
+    /** INV-002 on V-001, ISSUED, overdue. */
+    inv002: "50000000-0000-4000-8000-000000000002",
+    /** INV-003 on V-001, DRAFT. */
+    inv003: "50000000-0000-4000-8000-000000000003",
+    /** INV-004 on V-001, CANCELLED. */
+    inv004: "50000000-0000-4000-8000-000000000004",
+    /** SI-001 on V-OUT-1, PAID. */
+    si001: "50000000-0000-4000-8000-000000000005",
+  },
 } as const;
 
 /**
  * Fixture "basic": 2 investors, 2 subcontractors, 3 projects (1 archived) (M2) and 4 active contracts on Villa Lake
- * and the archived School Annex (M3).
+ * and the archived School Annex (M3), 5 invoices on Villa Lake covering all statuses, one with an attachment (M4).
  */
-export async function basicFixture(db: SqlDriver): Promise<void> {
+export async function basicFixture(db: SqlDriver, documents: DocumentStorage): Promise<void> {
+  // Loaded lazily: the Playwright runner imports BASIC from this module in Node, where `?raw` is unavailable.
+  const { default: samplePdf } = await import("./files/sample.pdf?raw");
+  const attachment = await documents.save(new TextEncoder().encode(samplePdf), "sample.pdf", BASIC.invoices.inv001);
   await db.transaction(async (tx) => {
     const investor = (id: string, name: string, vat: string, contact: string | null, email: string | null) =>
       tx.execute(
@@ -102,5 +119,40 @@ export async function basicFixture(db: SqlDriver): Promise<void> {
       "2026-02-05",
       800_000,
     );
+
+    const invoice = (
+      id: string,
+      number: string,
+      contractId: string,
+      date: string,
+      value: number,
+      status: string,
+      dueDate: string | null,
+      withAttachment = false,
+    ) =>
+      tx.execute(
+        `INSERT INTO invoice (id, number, contract_id, value, vat_rate, date, due_date, status, description,
+                              attachment_path, attachment_name, created_at, updated_at, archived_at)
+         VALUES (?, ?, ?, ?, 2000, ?, ?, ?, NULL, ?, ?, ?, ?, NULL)`,
+        [
+          id,
+          number,
+          contractId,
+          value,
+          date,
+          dueDate,
+          status,
+          withAttachment ? attachment.path : null,
+          withAttachment ? attachment.originalName : null,
+          TS,
+          TS,
+        ],
+      );
+    const { villaIn, villaOut } = BASIC.contracts;
+    await invoice(BASIC.invoices.inv001, "INV-001", villaIn, "2025-03-01", 4_000_000, "PAID", "2025-03-31", true);
+    await invoice(BASIC.invoices.inv002, "INV-002", villaIn, "2025-06-01", 3_000_000, "ISSUED", "2025-06-30");
+    await invoice(BASIC.invoices.inv003, "INV-003", villaIn, "2025-07-01", 1_000_000, "DRAFT", null);
+    await invoice(BASIC.invoices.inv004, "INV-004", villaIn, "2025-08-01", 500_000, "CANCELLED", null);
+    await invoice(BASIC.invoices.si001, "SI-001", villaOut, "2025-04-10", 1_500_000, "PAID", null);
   });
 }
