@@ -7,6 +7,7 @@
 | [M3](M3.md) | Contract CRUD | M2 |
 | [M4](M4.md) | Invoice CRUD + PDF | M3 |
 | [M5](M5.md) | Analytics views | M4 |
+| [M6](M6.md) | Serbian (Latin) language | M5 |
 
 ## Test case conventions
 - ID format `TC-M<n>-<nnn>`. IDs are never renumbered or reused; removed TCs are struck through and marked
@@ -44,3 +45,4 @@
 | Analytics | AN-000…AN-4, AN-900…904, UI-060…064 | M5 | TC-M5-001…012, 015, 020…027 |
 | Budget realisation | AN-5, AN-905, UI-065, UI-033 | M5 | TC-M5-013, 014, 028, 029 |
 | Projects year filter | UI-030 / AN-3 | M2, M5 | TC-M2-024, 034, TC-M5-012 |
+| Language (Serbian Latin) | DM-060 language, DS-006, UI-002, UI-080, UI-090, UI-091, AR-010 | M6 | TC-M6-001…013 |

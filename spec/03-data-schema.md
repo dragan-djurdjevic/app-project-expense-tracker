@@ -14,7 +14,8 @@
 - Applied versions recorded in `schema_migrations`.
 - A released migration file is **never edited**; schema changes are new migration files.
 - During the POC (before first release tag `v1.0.0`), the spec may state that `0001_init.sql` is regenerated;
-  the current spec says: **all tables are created by `0001_init.sql`.**
+  the current spec says: **all tables are created by `0001_init.sql`; later column changes are in the migrations
+  listed from DS-006 on.**
 
 ## DS-003 `0001_init.sql` (normative)
 ```sql
@@ -122,3 +123,9 @@ INSERT INTO settings (id) VALUES (1);
 ## DS-005 Year extraction
 Year of a date column = `CAST(substr(<col>, 1, 4) AS INTEGER)`. Analytics SQL must use this exact expression
 (or an equivalent range predicate `<col> >= 'YYYY-01-01' AND <col> <= 'YYYY-12-31'`).
+
+## DS-006 `0002_settings_language.sql` (normative)
+```sql
+ALTER TABLE settings ADD COLUMN language TEXT NOT NULL DEFAULT 'en' CHECK (language IN ('en','sr-Latn'));
+```
+After all migrations `schema_migrations` holds versions `1` and `2`.

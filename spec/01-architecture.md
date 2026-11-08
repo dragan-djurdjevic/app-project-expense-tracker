@@ -125,7 +125,7 @@ src/
   ui/
     screens/         # one folder per screen (UI-* IDs)
     components/      # shared: DataTable, MoneyInput, YearFilter, ConfirmDialog, ...
-    i18n/            # en.json, index.ts
+    i18n/            # en.json, sr-Latn.json, index.ts
     format/          # money/date/percent formatting
   main.tsx
 src-tauri/           # Tauri Rust shell, tauri.conf.json, capabilities
@@ -161,7 +161,8 @@ validation/          # validator reports Mx-report.md
 ## AR-010 Startup sequence
 1. Open DB (create file if missing).
 2. Run pending migrations in a transaction (table `schema_migrations(version INTEGER PK, applied_at TEXT)`).
-3. Ensure `settings` row exists (default currency `EUR`, default VAT 2000 bp).
+3. Ensure `settings` row exists (default currency `EUR`, default VAT 2000 bp, language `en`); load settings and set
+   the UI language (UI-090).
 4. Render app shell. If steps 1–2 fail, show a full-screen error with the message and the DB path.
 
 ## AR-011 package.json scripts (contract for agents)
@@ -187,7 +188,7 @@ Goal: confirm as much as possible locally; CI only adds what physically needs Wi
 
 | Check | Where | How |
 |---|---|---|
-| Real Tauri app starts, SQLite plugin works, migrations run | local (macOS) | `yarn smoke:mac`: `tauri build --bundles app`; start `<bundle>.app/Contents/MacOS/<binary>` with `ARCHTRACKER_DATA_DIR=<fresh temp dir>`; wait up to 20 s; assert the process is alive, `tracker.db` exists and `sqlite3 tracker.db "SELECT version FROM schema_migrations"` prints `1`; kill the process; delete the temp dir. Exit code ≠ 0 on any failure. |
+| Real Tauri app starts, SQLite plugin works, migrations run | local (macOS) | `yarn smoke:mac`: `tauri build --bundles app`; start `<bundle>.app/Contents/MacOS/<binary>` with `ARCHTRACKER_DATA_DIR=<fresh temp dir>`; wait up to 20 s; assert the process is alive, `tracker.db` exists and `sqlite3 tracker.db "SELECT version FROM schema_migrations ORDER BY version"` prints the versions of all migrations (`1`, `2`; DS-006); kill the process; delete the temp dir. Exit code ≠ 0 on any failure. |
 | Windows installer builds | local (macOS cross-compile) | `yarn build:win-cross` produces `src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*-setup.exe`; validator asserts the file exists and is > 1 MB. Tauri marks this cross-compile as experimental; if it breaks for tooling reasons, the validator reports it as FAIL with the error, never silently skips it. |
 | Installer installs and app starts on Windows | CI (`windows-latest`) | Same checks as `smoke:mac`, but on the installed app after a silent NSIS install. Needs a push. |
 

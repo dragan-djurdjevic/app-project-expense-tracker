@@ -9,6 +9,18 @@ Every spec change gets an entry here **in the same commit** as the spec edit. Fo
 Bump rules: PATCH = wording/clarification with no behaviour change; MINOR = new or changed behaviour;
 MAJOR = reserved for post-POC breaking changes.
 
+## 0.4.0 — 2026-11-08
+- ADDED DS-006: migration `0002_settings_language.sql` adds `settings.language`.
+- CHANGED DM-060: new setting `language` (`en` | `sr-Latn`, default `en`).
+- CHANGED OV-005, OV-006: Serbian (Latin) UI in scope; Cyrillic and other languages out of scope.
+- CHANGED UI-002, UI-050: locale-aware money/percent/VAT % formatting and sorting; VAT input accepts `.` or `,`.
+- CHANGED UI-080: language select applied immediately on save.
+- CHANGED UI-090: `sr-Latn.json`, active language from settings, date picker locale.
+- ADDED UI-091: Serbian (Latin) terminology.
+- CHANGED AR-007, AR-010, AR-012, DS-002: i18n files, startup language, smoke checks expect migrations `1`, `2`.
+- CHANGED TC-M1-010, 011, 014, 030, 032: account for migration 2 and the `language` setting.
+- ADDED M6 milestone with TC-M6-001…013.
+
 ## 0.3.9 — 2026-11-08
 - CHANGED AR-004: `AnalyticsQuery.availableYears()` returns `[]` when empty; the `getAvailableYears` use case
   applies the AN-000h current-year fallback.

@@ -22,7 +22,7 @@ A single user per computer. No login, no roles, no multi-user concurrency.
 - Soft delete (archive) for all entities.
 - PDF attachment per invoice (attach, open, replace, remove).
 - Analytics views AN-1 … AN-4 (see `05-analytics.md`), filterable by year, and AN-5 budget realisation (cumulative).
-- English UI, prepared for translation (i18n).
+- English and Serbian (Latin script) UI, language selectable in Settings (i18n, UI-090/UI-091).
 - Local SQLite database stored in the OS app-data directory.
 
 ## OV-006 Out of scope
@@ -33,6 +33,7 @@ A single user per computer. No login, no roles, no multi-user concurrency.
 - Printing, export to Excel/PDF, e-mail.
 - Backup/restore UI (user can copy the app-data folder manually).
 - macOS installer.
+- Serbian Cyrillic script and any language other than English and Serbian (Latin).
 - Hard delete of records.
 
 ## OV-007 Glossary
