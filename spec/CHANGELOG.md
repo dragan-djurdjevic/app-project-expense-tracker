@@ -9,6 +9,10 @@ Every spec change gets an entry here **in the same commit** as the spec edit. Fo
 Bump rules: PATCH = wording/clarification with no behaviour change; MINOR = new or changed behaviour;
 MAJOR = reserved for post-POC breaking changes.
 
+## 0.3.9 — 2026-11-08
+- CHANGED AR-004: `AnalyticsQuery.availableYears()` returns `[]` when empty; the `getAvailableYears` use case
+  applies the AN-000h current-year fallback.
+
 ## 0.3.8 — 2026-11-08
 - CHANGED AN-5: "—" for null/0 budget applies only to the "% of budget" columns; Realisation % of contracted is
   "—" only when Contracted is 0.
