@@ -1,10 +1,21 @@
-// Spec: AR-001, AR-005, AR-009, UI-080, UI-010, UI-020, UI-030, UI-032, UI-040, UI-041
+// Spec: AR-001, AR-005, AR-009, UI-080, UI-010, UI-020, UI-030, UI-032, UI-040, UI-041, UI-050, UI-051, UI-053
 import type { ArchiveContract } from "../core/usecases/contract/archiveContract";
 import type { CreateContract } from "../core/usecases/contract/createContract";
 import type { GetContract } from "../core/usecases/contract/getContract";
 import type { ListContracts } from "../core/usecases/contract/listContracts";
 import type { RestoreContract } from "../core/usecases/contract/restoreContract";
 import type { UpdateContract } from "../core/usecases/contract/updateContract";
+import type { InvoiceAttachmentFile } from "../core/domain/Invoice";
+import type { ArchiveInvoice } from "../core/usecases/invoice/archiveInvoice";
+import type { AttachInvoiceDocument } from "../core/usecases/invoice/attachInvoiceDocument";
+import type { ChangeInvoiceStatus } from "../core/usecases/invoice/changeInvoiceStatus";
+import type { CreateInvoice } from "../core/usecases/invoice/createInvoice";
+import type { GetInvoice } from "../core/usecases/invoice/getInvoice";
+import type { ListInvoices } from "../core/usecases/invoice/listInvoices";
+import type { OpenInvoiceDocument } from "../core/usecases/invoice/openInvoiceDocument";
+import type { RemoveInvoiceDocument } from "../core/usecases/invoice/removeInvoiceDocument";
+import type { RestoreInvoice } from "../core/usecases/invoice/restoreInvoice";
+import type { UpdateInvoice } from "../core/usecases/invoice/updateInvoice";
 import type { ArchiveInvestor } from "../core/usecases/investor/archiveInvestor";
 import type { CreateInvestor } from "../core/usecases/investor/createInvestor";
 import type { GetInvestor } from "../core/usecases/investor/getInvestor";
@@ -55,6 +66,16 @@ export interface UseCases {
   updateContract: UpdateContract;
   archiveContract: ArchiveContract;
   restoreContract: RestoreContract;
+  listInvoices: ListInvoices;
+  getInvoice: GetInvoice;
+  createInvoice: CreateInvoice;
+  updateInvoice: UpdateInvoice;
+  archiveInvoice: ArchiveInvoice;
+  restoreInvoice: RestoreInvoice;
+  changeInvoiceStatus: ChangeInvoiceStatus;
+  attachInvoiceDocument: AttachInvoiceDocument;
+  removeInvoiceDocument: RemoveInvoiceDocument;
+  openInvoiceDocument: OpenInvoiceDocument;
 }
 
 export type RuntimeMode = "tauri" | "browser";
@@ -67,6 +88,8 @@ export interface RuntimeInfo {
   documentsPath: string | null;
   /** Opens a folder in the OS file manager; null when not available (browser mode). */
   openFolder: ((path: string) => Promise<void>) | null;
+  /** UI-053: native PDF file dialog (Tauri mode); null in browser mode (hidden file input instead). */
+  pickPdf: (() => Promise<InvoiceAttachmentFile | null>) | null;
 }
 
 export interface Container {

@@ -1,6 +1,7 @@
-// Spec: AR-009, AR-007
+// Spec: AR-009, AR-007, DS-004
 import type { SqlDriver } from "../adapters/sqlite/SqlDriver";
 import type { InMemoryDocumentStorage } from "../adapters/storage/InMemoryDocumentStorage";
+import type { DocumentStorage } from "../core/ports/DocumentStorage";
 
 export interface TestHooks {
   reset(): Promise<void>;
@@ -14,8 +15,8 @@ declare global {
   }
 }
 
-/** A named seed fixture (`tests/fixtures/*.ts`) writing rows directly through the SqlDriver. */
-export type Fixture = (db: SqlDriver) => Promise<void>;
+/** A named seed fixture (`tests/fixtures/*.ts`) writing rows directly through the SqlDriver and attachments to the documents. */
+export type Fixture = (db: SqlDriver, documents: DocumentStorage) => Promise<void>;
 
 const TABLES_CHILD_FIRST = ["invoice", "contract", "project", "subcontractor", "investor", "settings"];
 
@@ -40,7 +41,7 @@ export function makeTestHooks(
       if (!fixture) {
         throw new Error(`Unknown fixture: ${fixtureName}`);
       }
-      await fixture(db);
+      await fixture(db, documents);
     },
   };
 }

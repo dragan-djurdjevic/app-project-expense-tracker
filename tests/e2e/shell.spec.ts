@@ -5,7 +5,7 @@ import { expect, test, type Page } from "@playwright/test";
 const NAV = [
   { label: "Projects", route: "/projects", testId: "nav-projects", placeholder: null },
   { label: "Contracts", route: "/contracts", testId: "nav-contracts", placeholder: null },
-  { label: "Invoices", route: "/invoices", testId: "nav-invoices", placeholder: "Coming in M4" },
+  { label: "Invoices", route: "/invoices", testId: "nav-invoices", placeholder: null },
   { label: "Investors", route: "/investors", testId: "nav-investors", placeholder: null },
   { label: "Subcontractors", route: "/subcontractors", testId: "nav-subcontractors", placeholder: null },
   {

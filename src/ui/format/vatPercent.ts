@@ -1,4 +1,4 @@
-// Spec: UI-002, DM-001, BR-GEN-002, BR-GEN-003
+// Spec: UI-002, UI-050, DM-001, BR-GEN-002, BR-GEN-003
 import type { Result } from "../../core/domain/Result";
 
 /** Parses a VAT percent with up to 2 decimals into basis points, e.g. "20" → 2000, "9.5" → 950. */
@@ -21,4 +21,9 @@ export function parseVatPercent(input: string): Result<number> {
 /** Formats basis points as a percent input value, e.g. 2000 → "20", 950 → "9.5". */
 export function formatVatPercent(basisPoints: number): string {
   return String(basisPoints / 100);
+}
+
+/** UI-050 VAT % column: basis points ÷ 100, up to 2 decimals without trailing zeros, e.g. 2000 → "20 %", 950 → "9.5 %". */
+export function formatVatRate(basisPoints: number): string {
+  return `${String(basisPoints / 100)} %`;
 }

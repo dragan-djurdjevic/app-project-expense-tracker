@@ -103,6 +103,36 @@
         "INCOMING": "In",
         "OUTGOING": "Out"
       }
+    },
+    "invoice": {
+      "singular": "Invoice",
+      "new": "New Invoice",
+      "edit": "Edit Invoice",
+      "number": "Number",
+      "direction": "Direction",
+      "contract": "Contract",
+      "project": "Project",
+      "date": "Date",
+      "dueDate": "Due date",
+      "net": "Net",
+      "vatPercent": "VAT %",
+      "gross": "Gross",
+      "status": "Status",
+      "attachment": "Attachment",
+      "value": "Value (net)",
+      "vatRate": "VAT rate (%)",
+      "vatAmount": "VAT amount",
+      "description": "Description",
+      "contractOption": "{{number}} — {{project}} ({{direction}})",
+      "invoicedSoFar": "Invoiced so far: {{invoiced}} of contract value {{value}}",
+      "overInvoiced": "Saving this invoice will exceed the contract value.",
+      "attach": "Attach PDF",
+      "replace": "Replace",
+      "remove": "Remove",
+      "confirmRemove": {
+        "title": "Remove attachment",
+        "message": "Remove the attachment “{{name}}”?"
+      }
     }
   },
   "enum": {
@@ -116,6 +146,12 @@
     "contractType": {
       "INCOMING": "Incoming",
       "OUTGOING": "Outgoing"
+    },
+    "invoiceStatus": {
+      "DRAFT": "Draft",
+      "ISSUED": "Issued",
+      "PAID": "Paid",
+      "CANCELLED": "Cancelled"
     }
   },
   "settings": {
@@ -144,6 +180,15 @@
       "subcontractorForbidden": "Incoming contracts cannot have a subcontractor.",
       "numberDuplicate": "This contract number is already used in this project."
     },
-    "immutable": "This field cannot be changed after creation."
+    "immutable": "This field cannot be changed after creation.",
+    "invoice": {
+      "numberDuplicate": "This invoice number is already used on this contract.",
+      "dueBeforeDate": "The due date cannot be before the invoice date.",
+      "statusTransition": "This status change is not allowed."
+    },
+    "attachment": {
+      "notPdf": "The file must be a PDF.",
+      "tooLarge": "The file must not be larger than 20 MB."
+    }
   }
 }

@@ -1,6 +1,8 @@
-// Spec: AR-004, AR-005, DM-040
+// Spec: AR-004, AR-005, DM-040, DM-050, DS-004
 import { SqliteContractRepository } from "../../src/adapters/sqlite/SqliteContractRepository";
 import { SqliteInvestorRepository } from "../../src/adapters/sqlite/SqliteInvestorRepository";
+import { SqliteInvoiceRepository } from "../../src/adapters/sqlite/SqliteInvoiceRepository";
+import { SqliteSettingsRepository } from "../../src/adapters/sqlite/SqliteSettingsRepository";
 import { SqliteProjectRepository } from "../../src/adapters/sqlite/SqliteProjectRepository";
 import { SqliteSubcontractorRepository } from "../../src/adapters/sqlite/SqliteSubcontractorRepository";
 import { makeArchiveContract } from "../../src/core/usecases/contract/archiveContract";
@@ -9,6 +11,17 @@ import { makeGetContract } from "../../src/core/usecases/contract/getContract";
 import { makeListContracts } from "../../src/core/usecases/contract/listContracts";
 import { makeRestoreContract } from "../../src/core/usecases/contract/restoreContract";
 import { makeUpdateContract } from "../../src/core/usecases/contract/updateContract";
+import { InMemoryDocumentStorage } from "../../src/adapters/storage/InMemoryDocumentStorage";
+import { makeArchiveInvoice } from "../../src/core/usecases/invoice/archiveInvoice";
+import { makeAttachInvoiceDocument } from "../../src/core/usecases/invoice/attachInvoiceDocument";
+import { makeChangeInvoiceStatus } from "../../src/core/usecases/invoice/changeInvoiceStatus";
+import { makeCreateInvoice } from "../../src/core/usecases/invoice/createInvoice";
+import { makeGetInvoice } from "../../src/core/usecases/invoice/getInvoice";
+import { makeListInvoices } from "../../src/core/usecases/invoice/listInvoices";
+import { makeOpenInvoiceDocument } from "../../src/core/usecases/invoice/openInvoiceDocument";
+import { makeRemoveInvoiceDocument } from "../../src/core/usecases/invoice/removeInvoiceDocument";
+import { makeRestoreInvoice } from "../../src/core/usecases/invoice/restoreInvoice";
+import { makeUpdateInvoice } from "../../src/core/usecases/invoice/updateInvoice";
 import { makeArchiveInvestor } from "../../src/core/usecases/investor/archiveInvestor";
 import { makeCreateInvestor } from "../../src/core/usecases/investor/createInvestor";
 import { makeGetInvestor } from "../../src/core/usecases/investor/getInvestor";
@@ -32,7 +45,7 @@ import { controlledClock } from "./controlledClock";
 import { migratedDb } from "./db";
 import { sequentialIds } from "./fixedClock";
 
-/** Real SQLite repositories on a fresh in-memory DB, wired to the M2/M3 use cases like `composition.ts`. */
+/** Real SQLite repositories on a fresh in-memory DB, wired to the M2–M4 use cases like `composition.ts`. */
 export async function setupServices() {
   const db = await migratedDb();
   const clock = controlledClock("2026-01-01T00:00:00.000Z");
@@ -41,6 +54,9 @@ export async function setupServices() {
   const subcontractorRepo = new SqliteSubcontractorRepository(db, clock);
   const projectRepo = new SqliteProjectRepository(db, clock);
   const contractRepo = new SqliteContractRepository(db, clock);
+  const invoiceRepo = new SqliteInvoiceRepository(db, clock);
+  const settingsRepo = new SqliteSettingsRepository(db);
+  const documents = new InMemoryDocumentStorage(sequentialIds("90000000-0000-4000-8000-"));
   return {
     db,
     clock,
@@ -48,6 +64,9 @@ export async function setupServices() {
     subcontractorRepo,
     projectRepo,
     contractRepo,
+    invoiceRepo,
+    settingsRepo,
+    documents,
     listInvestors: makeListInvestors({ investorRepo, projectRepo }),
     getInvestor: makeGetInvestor({ investorRepo }),
     createInvestor: makeCreateInvestor({ investorRepo, clock, ids }),
@@ -61,7 +80,7 @@ export async function setupServices() {
     archiveSubcontractor: makeArchiveSubcontractor({ subcontractorRepo }),
     restoreSubcontractor: makeRestoreSubcontractor({ subcontractorRepo }),
     listProjects: makeListProjects({ projectRepo, investorRepo }),
-    getProject: makeGetProject({ projectRepo, investorRepo, contractRepo }),
+    getProject: makeGetProject({ projectRepo, investorRepo, contractRepo, invoiceRepo }),
     createProject: makeCreateProject({ projectRepo, investorRepo, clock, ids }),
     updateProject: makeUpdateProject({ projectRepo, investorRepo, clock }),
     archiveProject: makeArchiveProject({ projectRepo }),
@@ -73,6 +92,16 @@ export async function setupServices() {
     updateContract: makeUpdateContract({ contractRepo, subcontractorRepo, clock }),
     archiveContract: makeArchiveContract({ contractRepo }),
     restoreContract: makeRestoreContract({ contractRepo }),
+    listInvoices: makeListInvoices({ invoiceRepo, clock }),
+    getInvoice: makeGetInvoice({ invoiceRepo }),
+    createInvoice: makeCreateInvoice({ invoiceRepo, contractRepo, settingsRepo, clock, ids }),
+    updateInvoice: makeUpdateInvoice({ invoiceRepo, contractRepo, clock }),
+    archiveInvoice: makeArchiveInvoice({ invoiceRepo }),
+    restoreInvoice: makeRestoreInvoice({ invoiceRepo }),
+    changeInvoiceStatus: makeChangeInvoiceStatus({ invoiceRepo, clock }),
+    attachInvoiceDocument: makeAttachInvoiceDocument({ invoiceRepo, documents, clock }),
+    removeInvoiceDocument: makeRemoveInvoiceDocument({ invoiceRepo, documents, clock }),
+    openInvoiceDocument: makeOpenInvoiceDocument({ invoiceRepo, documents }),
   };
 }
 

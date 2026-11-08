@@ -1,10 +1,11 @@
-// Spec: AR-001, AR-002, AR-003, AR-005, AR-009, AR-010, DS-001, DS-004, UI-010, UI-020, UI-030, UI-032, UI-040, UI-041
+// Spec: AR-001, AR-002, AR-003, AR-005, AR-009, AR-010, DS-001, DS-004, UI-010, UI-020, UI-030, UI-032, UI-040, UI-041, UI-050, UI-051, UI-052, UI-053, DM-050
 import wasmUrl from "sql.js/dist/sql-wasm.wasm?url";
 import { bundledMigrations } from "../adapters/sqlite/bundledMigrations";
 import { ensureSettingsRow, runMigrations } from "../adapters/sqlite/runMigrations";
 import type { SqlDriver } from "../adapters/sqlite/SqlDriver";
 import { SqliteContractRepository } from "../adapters/sqlite/SqliteContractRepository";
 import { SqliteInvestorRepository } from "../adapters/sqlite/SqliteInvestorRepository";
+import { SqliteInvoiceRepository } from "../adapters/sqlite/SqliteInvoiceRepository";
 import { SqliteProjectRepository } from "../adapters/sqlite/SqliteProjectRepository";
 import { SqliteSettingsRepository } from "../adapters/sqlite/SqliteSettingsRepository";
 import { SqliteSubcontractorRepository } from "../adapters/sqlite/SqliteSubcontractorRepository";
@@ -13,7 +14,7 @@ import { FsDocumentStorage } from "../adapters/storage/FsDocumentStorage";
 import { InMemoryDocumentStorage } from "../adapters/storage/InMemoryDocumentStorage";
 import { SystemClock } from "../adapters/system/SystemClock";
 import { UuidIdGenerator } from "../adapters/system/UuidIdGenerator";
-import { getDataDir, isTauriRuntime, joinPath, openInOs } from "../adapters/tauri/platform";
+import { getDataDir, isTauriRuntime, joinPath, openInOs, pickPdfFile } from "../adapters/tauri/platform";
 import { TauriSqlDriver } from "../adapters/tauri/TauriSqlDriver";
 import type { DocumentStorage } from "../core/ports/DocumentStorage";
 import { makeArchiveContract } from "../core/usecases/contract/archiveContract";
@@ -22,6 +23,16 @@ import { makeGetContract } from "../core/usecases/contract/getContract";
 import { makeListContracts } from "../core/usecases/contract/listContracts";
 import { makeRestoreContract } from "../core/usecases/contract/restoreContract";
 import { makeUpdateContract } from "../core/usecases/contract/updateContract";
+import { makeArchiveInvoice } from "../core/usecases/invoice/archiveInvoice";
+import { makeAttachInvoiceDocument } from "../core/usecases/invoice/attachInvoiceDocument";
+import { makeChangeInvoiceStatus } from "../core/usecases/invoice/changeInvoiceStatus";
+import { makeCreateInvoice } from "../core/usecases/invoice/createInvoice";
+import { makeGetInvoice } from "../core/usecases/invoice/getInvoice";
+import { makeListInvoices } from "../core/usecases/invoice/listInvoices";
+import { makeOpenInvoiceDocument } from "../core/usecases/invoice/openInvoiceDocument";
+import { makeRemoveInvoiceDocument } from "../core/usecases/invoice/removeInvoiceDocument";
+import { makeRestoreInvoice } from "../core/usecases/invoice/restoreInvoice";
+import { makeUpdateInvoice } from "../core/usecases/invoice/updateInvoice";
 import { makeArchiveInvestor } from "../core/usecases/investor/archiveInvestor";
 import { makeCreateInvestor } from "../core/usecases/investor/createInvestor";
 import { makeGetInvestor } from "../core/usecases/investor/getInvestor";
@@ -71,12 +82,12 @@ export async function createContainer(): Promise<Container> {
       const documentsPath = await joinPath(dataDir, DOCUMENTS_DIR);
       db = await TauriSqlDriver.open(dbPath);
       documents = new FsDocumentStorage(documentsPath, ids);
-      runtime = { mode: "tauri", dbPath, documentsPath, openFolder: openInOs };
+      runtime = { mode: "tauri", dbPath, documentsPath, openFolder: openInOs, pickPdf: pickPdfFile };
     } else {
       db = await SqlJsDriver.create({ locateFile: () => wasmUrl });
       inMemoryDocuments = new InMemoryDocumentStorage(ids);
       documents = inMemoryDocuments;
-      runtime = { mode: "browser", dbPath: null, documentsPath: null, openFolder: null };
+      runtime = { mode: "browser", dbPath: null, documentsPath: null, openFolder: null, pickPdf: null };
     }
     await runMigrations(db, bundledMigrations(), clock);
     await ensureSettingsRow(db);
@@ -84,14 +95,12 @@ export async function createContainer(): Promise<Container> {
     throw new StartupError(message(error), dbPath);
   }
 
-  // DocumentStorage is chosen per mode here; the invoice use cases that consume it arrive in M4.
-  void documents;
-
   const settingsRepo = new SqliteSettingsRepository(db);
   const investorRepo = new SqliteInvestorRepository(db, clock);
   const subcontractorRepo = new SqliteSubcontractorRepository(db, clock);
   const projectRepo = new SqliteProjectRepository(db, clock);
   const contractRepo = new SqliteContractRepository(db, clock);
+  const invoiceRepo = new SqliteInvoiceRepository(db, clock);
 
   if (inMemoryDocuments && import.meta.env.MODE === "e2e") {
     window.__TEST__ = makeTestHooks(db, inMemoryDocuments, (await import("./e2eFixtures")).e2eFixtures);
@@ -114,7 +123,7 @@ export async function createContainer(): Promise<Container> {
       archiveSubcontractor: makeArchiveSubcontractor({ subcontractorRepo }),
       restoreSubcontractor: makeRestoreSubcontractor({ subcontractorRepo }),
       listProjects: makeListProjects({ projectRepo, investorRepo }),
-      getProject: makeGetProject({ projectRepo, investorRepo, contractRepo }),
+      getProject: makeGetProject({ projectRepo, investorRepo, contractRepo, invoiceRepo }),
       createProject: makeCreateProject({ projectRepo, investorRepo, clock, ids }),
       updateProject: makeUpdateProject({ projectRepo, investorRepo, clock }),
       archiveProject: makeArchiveProject({ projectRepo }),
@@ -126,6 +135,16 @@ export async function createContainer(): Promise<Container> {
       updateContract: makeUpdateContract({ contractRepo, subcontractorRepo, clock }),
       archiveContract: makeArchiveContract({ contractRepo }),
       restoreContract: makeRestoreContract({ contractRepo }),
+      listInvoices: makeListInvoices({ invoiceRepo, clock }),
+      getInvoice: makeGetInvoice({ invoiceRepo }),
+      createInvoice: makeCreateInvoice({ invoiceRepo, contractRepo, settingsRepo, clock, ids }),
+      updateInvoice: makeUpdateInvoice({ invoiceRepo, contractRepo, clock }),
+      archiveInvoice: makeArchiveInvoice({ invoiceRepo }),
+      restoreInvoice: makeRestoreInvoice({ invoiceRepo }),
+      changeInvoiceStatus: makeChangeInvoiceStatus({ invoiceRepo, clock }),
+      attachInvoiceDocument: makeAttachInvoiceDocument({ invoiceRepo, documents, clock }),
+      removeInvoiceDocument: makeRemoveInvoiceDocument({ invoiceRepo, documents, clock }),
+      openInvoiceDocument: makeOpenInvoiceDocument({ invoiceRepo, documents }),
     },
     runtime,
   };
