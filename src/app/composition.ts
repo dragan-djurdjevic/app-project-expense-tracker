@@ -1,4 +1,4 @@
-// Spec: AR-001, AR-002, AR-003, AR-005, AR-009, AR-010, DS-001, DS-004, UI-010, UI-020, UI-030, UI-032, UI-040, UI-041, UI-050, UI-051, UI-052, UI-053, DM-050, AN-000, UI-060, UI-061, UI-062, UI-063, UI-064, UI-065, UI-033
+// Spec: AR-001, AR-002, AR-003, AR-005, AR-009, AR-010, AR-013, DEMO-001, DEMO-004, UI-003, DS-001, DS-004, UI-010, UI-020, UI-030, UI-032, UI-040, UI-041, UI-050, UI-051, UI-052, UI-053, DM-050, AN-000, UI-060, UI-061, UI-062, UI-063, UI-064, UI-065, UI-033
 import wasmUrl from "sql.js/dist/sql-wasm.wasm?url";
 import { bundledMigrations } from "../adapters/sqlite/bundledMigrations";
 import { ensureSettingsRow, runMigrations } from "../adapters/sqlite/runMigrations";
@@ -15,7 +15,16 @@ import { FsDocumentStorage } from "../adapters/storage/FsDocumentStorage";
 import { InMemoryDocumentStorage } from "../adapters/storage/InMemoryDocumentStorage";
 import { SystemClock } from "../adapters/system/SystemClock";
 import { UuidIdGenerator } from "../adapters/system/UuidIdGenerator";
-import { getDataDir, isTauriRuntime, joinPath, openInOs, pickPdfFile } from "../adapters/tauri/platform";
+import {
+  getDataDir,
+  getProfile,
+  isTauriRuntime,
+  joinPath,
+  openInOs,
+  pickPdfFile,
+  resetDemo,
+  switchProfile,
+} from "../adapters/tauri/platform";
 import { TauriSqlDriver } from "../adapters/tauri/TauriSqlDriver";
 import type { DocumentStorage } from "../core/ports/DocumentStorage";
 import { makeGetBudgetRealisation } from "../core/usecases/analytics/getBudgetRealisation";
@@ -60,18 +69,34 @@ import { makeGetSubcontractor } from "../core/usecases/subcontractor/getSubcontr
 import { makeListSubcontractors } from "../core/usecases/subcontractor/listSubcontractors";
 import { makeRestoreSubcontractor } from "../core/usecases/subcontractor/restoreSubcontractor";
 import { makeUpdateSubcontractor } from "../core/usecases/subcontractor/updateSubcontractor";
-import { StartupError, type Container, type RuntimeInfo } from "./Container";
+import { StartupError, type Container, type RuntimeInfo, type UseCases } from "./Container";
+import { loadDemoPdf } from "./demo/loadDemoPdf";
+import { seedDemoData } from "./demo/seedDemoData";
+import { profileFromSearch, type Profile } from "./profile";
 import { makeTestHooks } from "./testHooks";
 
 const DB_FILE = "tracker.db";
 const DOCUMENTS_DIR = "documents";
+/** UI-003: window title in the demo profile (browser mode; Rust sets it in Tauri mode). */
+const DEMO_TITLE = "Architecture Project Tracker — Demo";
 
 function message(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-/** Builds the container; runs the startup sequence of AR-010 (steps 1–3). */
-export async function createContainer(): Promise<Container> {
+/** AR-013 browser mode: each start is a fresh in-memory DB, so switching and resetting are page loads. */
+function browserRelaunch(profile: Profile): Promise<void> {
+  window.location.assign(profile === "demo" ? "/?profile=demo" : "/");
+  return Promise.resolve();
+}
+
+export interface CreateContainerOptions {
+  /** AR-010 step 3a: called before the demo seed starts (to show a loading indicator). */
+  onDemoSeedStart?: () => void;
+}
+
+/** Builds the container; runs the startup sequence of AR-010 (steps 1–3a). */
+export async function createContainer(options: CreateContainerOptions = {}): Promise<Container> {
   const clock = new SystemClock();
   const ids = new UuidIdGenerator();
 
@@ -83,17 +108,38 @@ export async function createContainer(): Promise<Container> {
 
   try {
     if (isTauriRuntime()) {
+      const profile = await getProfile();
       const dataDir = await getDataDir();
       dbPath = await joinPath(dataDir, DB_FILE);
       const documentsPath = await joinPath(dataDir, DOCUMENTS_DIR);
       db = await TauriSqlDriver.open(dbPath);
       documents = new FsDocumentStorage(documentsPath, ids);
-      runtime = { mode: "tauri", dbPath, documentsPath, openFolder: openInOs, pickPdf: pickPdfFile };
+      runtime = {
+        mode: "tauri",
+        dbPath,
+        documentsPath,
+        openFolder: openInOs,
+        pickPdf: pickPdfFile,
+        profile,
+        switchProfile,
+        resetDemo,
+      };
     } else {
       db = await SqlJsDriver.create({ locateFile: () => wasmUrl });
       inMemoryDocuments = new InMemoryDocumentStorage(ids);
       documents = inMemoryDocuments;
-      runtime = { mode: "browser", dbPath: null, documentsPath: null, openFolder: null, pickPdf: null };
+      const profile = profileFromSearch(window.location.search);
+      runtime = {
+        mode: "browser",
+        dbPath: null,
+        documentsPath: null,
+        openFolder: null,
+        pickPdf: null,
+        profile,
+        switchProfile: browserRelaunch,
+        resetDemo: () => browserRelaunch("demo"),
+      };
+      if (profile === "demo") document.title = DEMO_TITLE;
     }
     await runMigrations(db, bundledMigrations(), clock);
     await ensureSettingsRow(db);
@@ -113,51 +159,59 @@ export async function createContainer(): Promise<Container> {
     window.__TEST__ = makeTestHooks(db, inMemoryDocuments, (await import("./e2eFixtures")).e2eFixtures);
   }
 
-  return {
-    useCases: {
-      getSettings: makeGetSettings({ settingsRepo }),
-      updateSettings: makeUpdateSettings({ settingsRepo }),
-      listInvestors: makeListInvestors({ investorRepo, projectRepo }),
-      getInvestor: makeGetInvestor({ investorRepo }),
-      createInvestor: makeCreateInvestor({ investorRepo, clock, ids }),
-      updateInvestor: makeUpdateInvestor({ investorRepo, clock }),
-      archiveInvestor: makeArchiveInvestor({ investorRepo }),
-      restoreInvestor: makeRestoreInvestor({ investorRepo }),
-      listSubcontractors: makeListSubcontractors({ subcontractorRepo }),
-      getSubcontractor: makeGetSubcontractor({ subcontractorRepo }),
-      createSubcontractor: makeCreateSubcontractor({ subcontractorRepo, clock, ids }),
-      updateSubcontractor: makeUpdateSubcontractor({ subcontractorRepo, clock }),
-      archiveSubcontractor: makeArchiveSubcontractor({ subcontractorRepo }),
-      restoreSubcontractor: makeRestoreSubcontractor({ subcontractorRepo }),
-      listProjects: makeListProjects({ projectRepo, investorRepo }),
-      getProject: makeGetProject({ projectRepo, investorRepo, contractRepo, invoiceRepo }),
-      createProject: makeCreateProject({ projectRepo, investorRepo, clock, ids }),
-      updateProject: makeUpdateProject({ projectRepo, investorRepo, clock }),
-      archiveProject: makeArchiveProject({ projectRepo }),
-      restoreProject: makeRestoreProject({ projectRepo }),
-      getAvailableYears: makeGetAvailableYears({ projectRepo, clock }),
-      listContracts: makeListContracts({ contractRepo }),
-      getContract: makeGetContract({ contractRepo }),
-      createContract: makeCreateContract({ contractRepo, projectRepo, subcontractorRepo, clock, ids }),
-      updateContract: makeUpdateContract({ contractRepo, subcontractorRepo, clock }),
-      archiveContract: makeArchiveContract({ contractRepo }),
-      restoreContract: makeRestoreContract({ contractRepo }),
-      listInvoices: makeListInvoices({ invoiceRepo, clock }),
-      getInvoice: makeGetInvoice({ invoiceRepo }),
-      createInvoice: makeCreateInvoice({ invoiceRepo, contractRepo, settingsRepo, clock, ids }),
-      updateInvoice: makeUpdateInvoice({ invoiceRepo, contractRepo, clock }),
-      archiveInvoice: makeArchiveInvoice({ invoiceRepo }),
-      restoreInvoice: makeRestoreInvoice({ invoiceRepo }),
-      changeInvoiceStatus: makeChangeInvoiceStatus({ invoiceRepo, clock }),
-      attachInvoiceDocument: makeAttachInvoiceDocument({ invoiceRepo, documents, clock }),
-      removeInvoiceDocument: makeRemoveInvoiceDocument({ invoiceRepo, documents, clock }),
-      openInvoiceDocument: makeOpenInvoiceDocument({ invoiceRepo, documents }),
-      getContractedVsCollected: makeGetContractedVsCollected({ analyticsQuery }),
-      getSubcontractorPayments: makeGetSubcontractorPayments({ analyticsQuery }),
-      getProjectsInYear: makeGetProjectsInYear({ analyticsQuery }),
-      getNetResult: makeGetNetResult({ analyticsQuery }),
-      getBudgetRealisation: makeGetBudgetRealisation({ analyticsQuery }),
-    },
-    runtime,
+  const useCases: UseCases = {
+    getSettings: makeGetSettings({ settingsRepo }),
+    updateSettings: makeUpdateSettings({ settingsRepo }),
+    listInvestors: makeListInvestors({ investorRepo, projectRepo }),
+    getInvestor: makeGetInvestor({ investorRepo }),
+    createInvestor: makeCreateInvestor({ investorRepo, clock, ids }),
+    updateInvestor: makeUpdateInvestor({ investorRepo, clock }),
+    archiveInvestor: makeArchiveInvestor({ investorRepo }),
+    restoreInvestor: makeRestoreInvestor({ investorRepo }),
+    listSubcontractors: makeListSubcontractors({ subcontractorRepo }),
+    getSubcontractor: makeGetSubcontractor({ subcontractorRepo }),
+    createSubcontractor: makeCreateSubcontractor({ subcontractorRepo, clock, ids }),
+    updateSubcontractor: makeUpdateSubcontractor({ subcontractorRepo, clock }),
+    archiveSubcontractor: makeArchiveSubcontractor({ subcontractorRepo }),
+    restoreSubcontractor: makeRestoreSubcontractor({ subcontractorRepo }),
+    listProjects: makeListProjects({ projectRepo, investorRepo }),
+    getProject: makeGetProject({ projectRepo, investorRepo, contractRepo, invoiceRepo }),
+    createProject: makeCreateProject({ projectRepo, investorRepo, clock, ids }),
+    updateProject: makeUpdateProject({ projectRepo, investorRepo, clock }),
+    archiveProject: makeArchiveProject({ projectRepo }),
+    restoreProject: makeRestoreProject({ projectRepo }),
+    getAvailableYears: makeGetAvailableYears({ projectRepo, clock }),
+    listContracts: makeListContracts({ contractRepo }),
+    getContract: makeGetContract({ contractRepo }),
+    createContract: makeCreateContract({ contractRepo, projectRepo, subcontractorRepo, clock, ids }),
+    updateContract: makeUpdateContract({ contractRepo, subcontractorRepo, clock }),
+    archiveContract: makeArchiveContract({ contractRepo }),
+    restoreContract: makeRestoreContract({ contractRepo }),
+    listInvoices: makeListInvoices({ invoiceRepo, clock }),
+    getInvoice: makeGetInvoice({ invoiceRepo }),
+    createInvoice: makeCreateInvoice({ invoiceRepo, contractRepo, settingsRepo, clock, ids }),
+    updateInvoice: makeUpdateInvoice({ invoiceRepo, contractRepo, clock }),
+    archiveInvoice: makeArchiveInvoice({ invoiceRepo }),
+    restoreInvoice: makeRestoreInvoice({ invoiceRepo }),
+    changeInvoiceStatus: makeChangeInvoiceStatus({ invoiceRepo, clock }),
+    attachInvoiceDocument: makeAttachInvoiceDocument({ invoiceRepo, documents, clock }),
+    removeInvoiceDocument: makeRemoveInvoiceDocument({ invoiceRepo, documents, clock }),
+    openInvoiceDocument: makeOpenInvoiceDocument({ invoiceRepo, documents }),
+    getContractedVsCollected: makeGetContractedVsCollected({ analyticsQuery }),
+    getSubcontractorPayments: makeGetSubcontractorPayments({ analyticsQuery }),
+    getProjectsInYear: makeGetProjectsInYear({ analyticsQuery }),
+    getNetResult: makeGetNetResult({ analyticsQuery }),
+    getBudgetRealisation: makeGetBudgetRealisation({ analyticsQuery }),
   };
+
+  if (runtime.profile === "demo") {
+    options.onDemoSeedStart?.();
+    try {
+      await seedDemoData(useCases, clock, loadDemoPdf);
+    } catch (error) {
+      throw new StartupError(message(error), dbPath);
+    }
+  }
+
+  return { useCases, runtime };
 }

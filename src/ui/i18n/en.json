@@ -196,7 +196,32 @@
     "languageOption": {
       "en": "English",
       "sr-Latn": "Srpski (latinica)"
+    },
+    "demo": {
+      "title": "Demo mode",
+      "help": "Demo mode uses its own database with sample data. Your real data is not shown, changed or deleted.",
+      "toggle": "Demo mode",
+      "reset": "Reset demo data",
+      "switchToDemo": {
+        "title": "Switch to demo mode?",
+        "message": "The app will restart and open the demo database. Your real data stays untouched.",
+        "confirm": "Restart in demo mode"
+      },
+      "switchToLive": {
+        "title": "Switch to live data?",
+        "message": "The app will restart and open your real database. Demo changes are kept until you reset them.",
+        "confirm": "Restart with live data"
+      },
+      "resetDialog": {
+        "title": "Reset demo data?",
+        "message": "All changes made in demo mode will be discarded and the sample data restored. The app will restart.",
+        "confirm": "Reset and restart"
+      }
     }
+  },
+  "demo": {
+    "banner": "Demo mode — sample data, separate from your real records.",
+    "switchToLive": "Switch to live data"
   },
   "errors": {
     "required": "This field is required.",

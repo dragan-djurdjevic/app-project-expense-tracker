@@ -1,12 +1,15 @@
-// Spec: UI-080, DM-060, UI-002, UI-002b, UI-090
-import { Alert, Button, Group, Select, Stack, Text, TextInput } from "@mantine/core";
+// Spec: UI-080, UI-081, AR-013, DM-060, UI-002, UI-002b, UI-090
+import { Alert, Button, Divider, Group, Select, Stack, Switch, Text, TextInput, Title } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useEffect, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useApp } from "../../../app/AppProvider";
+import type { Profile } from "../../../app/profile";
 import type { DomainError } from "../../../core/domain/DomainError";
 import { SUPPORTED_CURRENCIES, SUPPORTED_LANGUAGES } from "../../../core/usecases/settings/updateSettings";
+import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { ScreenTitle } from "../../components/ScreenTitle";
+import { SwitchProfileDialog } from "../../components/SwitchProfileDialog";
 import { formatVatPercent, parseVatPercent } from "../../format/vatPercent";
 import { applyLanguage } from "../../i18n";
 
@@ -29,6 +32,54 @@ function PathRow({ label, path, onOpen }: { label: string; path: string; onOpen:
           </Button>
         )}
       </Group>
+    </Stack>
+  );
+}
+
+/** UI-081: demo mode switch (shows the active profile; changes only after a restart) and the demo reset. */
+function DemoModeSection() {
+  const { t } = useTranslation();
+  const { runtime } = useApp();
+  const [target, setTarget] = useState<Profile | null>(null);
+  const [confirmReset, setConfirmReset] = useState(false);
+  const isDemo = runtime.profile === "demo";
+  const reset = () => {
+    runtime.resetDemo().catch((error: unknown) => {
+      notifications.show({
+        color: "red",
+        message: t("errors.unexpected", { message: error instanceof Error ? error.message : String(error) }),
+      });
+    });
+  };
+  return (
+    <Stack maw={480} mt="xl">
+      <Divider />
+      <Title order={4}>{t("settings.demo.title")}</Title>
+      <Text size="sm">{t("settings.demo.help")}</Text>
+      <Switch
+        label={t("settings.demo.toggle")}
+        checked={isDemo}
+        onChange={() => setTarget(isDemo ? "live" : "demo")}
+        data-testid="field-demo-mode"
+      />
+      {isDemo && (
+        <Group>
+          <Button variant="light" color="orange" onClick={() => setConfirmReset(true)} data-testid="btn-reset-demo">
+            {t("settings.demo.reset")}
+          </Button>
+        </Group>
+      )}
+      <SwitchProfileDialog target={target} onCancel={() => setTarget(null)} />
+      <ConfirmDialog
+        opened={confirmReset}
+        title={t("settings.demo.resetDialog.title")}
+        message={t("settings.demo.resetDialog.message")}
+        confirmLabel={t("settings.demo.resetDialog.confirm")}
+        testId="confirm-reset-demo"
+        confirmTestId="btn-confirm-reset"
+        onConfirm={reset}
+        onCancel={() => setConfirmReset(false)}
+      />
     </Stack>
   );
 }
@@ -149,6 +200,7 @@ export default function SettingsScreen() {
           />
         </Stack>
       </form>
+      <DemoModeSection />
     </>
   );
 }

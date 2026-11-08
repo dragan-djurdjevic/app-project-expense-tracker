@@ -1,4 +1,4 @@
-// Spec: AR-002, AR-006, AR-008
+// Spec: AR-002, AR-006, AR-008, AR-013, DEMO-001
 import js from "@eslint/js";
 import boundaries from "eslint-plugin-boundaries";
 import tseslint from "typescript-eslint";
@@ -32,6 +32,7 @@ export default tseslint.config(
         { type: "core-usecases", pattern: "src/core/usecases/**", partialMatch: false },
         { type: "core-other", pattern: "src/core/**", partialMatch: false },
         { type: "adapters", pattern: "src/adapters/**", partialMatch: false },
+        { type: "app-demo", pattern: "src/app/demo/**", partialMatch: false },
         { type: "app", pattern: "src/app/**", partialMatch: false },
         { type: "ui", pattern: "src/ui/**", partialMatch: false },
         { type: "main", pattern: "src", partialMatch: false },
@@ -56,7 +57,12 @@ export default tseslint.config(
             },
             {
               from: elementsOf(["app"]),
-              allow: [...toElements([...CORE, "adapters", "app"]), modules],
+              allow: [...toElements([...CORE, "adapters", "app", "app-demo"]), modules],
+            },
+            {
+              // DEMO-001: the demo seed uses the use cases only (no adapters, no SqlDriver); src/ui never imports it.
+              from: elementsOf(["app-demo"]),
+              allow: toElements([...CORE, "app", "app-demo"]),
             },
             {
               from: elementsOf(["ui"]),

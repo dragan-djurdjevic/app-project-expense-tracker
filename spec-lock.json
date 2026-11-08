@@ -1,12 +1,13 @@
 {
-  "specVersion": "0.4.0",
-  "specCommit": "7178af39c970c5f8622553bf962cd64e35d8abfe",
+  "specVersion": "0.5.1",
+  "specCommit": "ef459294d5558d1d953aafebd3065ff573980a87",
   "milestones": {
     "M1": "done",
     "M2": "done",
     "M3": "done",
     "M4": "done",
     "M5": "done",
-    "M6": "done"
+    "M6": "done",
+    "M7": "done"
   }
 }
